@@ -113,7 +113,8 @@
    :position :absolute
    :height   min-input-height
    :android  {:left (+ 4 left)}
-   :ios      {:left left}})
+   :ios      {:left left}
+   :desktop  {:left left}})
 
 (defnstyle input-helper-text [left]
   {:color               colors/gray
@@ -121,7 +122,8 @@
    :text-align-vertical :center
    :flex                1
    :android             {:top -1}
-   :ios                 {:line-height min-input-height}})
+   :ios                 {:line-height min-input-height}
+   :desktop             {:line-height min-input-height}})
 
 (defnstyle seq-input-text [left container-width]
   {:min-width           (- container-width left)
@@ -133,6 +135,9 @@
                          :height (+ 2 min-input-height)
                          :top    0.5}
    :ios                 {:line-height min-input-height
+                         :height      min-input-height
+                         :left        left}
+   :destkop             {:line-height min-input-height
                          :height      min-input-height
                          :left        left}})
 

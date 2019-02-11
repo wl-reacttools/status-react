@@ -10,7 +10,8 @@
    :color          (if outgoing colors/white colors/text)
    :letter-spacing -0.2
    :android        {:line-height 22}
-   :ios            {:line-height 22}})
+   :ios            {:line-height 22}
+   :desktop        {:line-height 22}})
 
 (defn message-padding-top
   [{:keys [first-in-group? display-username?]}]
@@ -134,6 +135,7 @@
    :color     colors/text
    :android   {:line-height 45}
    :ios       {:line-height 46}
+   :desktop   {:line-height 46}
    :margin-top (if incoming-group 4 0)})
 
 (defn message-view

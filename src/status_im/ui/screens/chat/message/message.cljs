@@ -279,7 +279,8 @@
                                                   (re-frame/dispatch [:stickers/open-sticker-pack (:pack content)]))
                                                 (re-frame/dispatch [:chat.ui/set-chat-ui-props {:messages-focused? true
                                                                                                 :show-stickers? false}])
-                                                (react/dismiss-keyboard!))
+                                                (when-not platform/desktop?
+                                                  (react/dismiss-keyboard!)))
                                :on-long-press #(when (= content-type constants/content-type-text)
                                                  (list-selection/chat-message message-id old-message-id (:text content) (i18n/label :t/message)))}
     [react/view {:accessibility-label :chat-item}

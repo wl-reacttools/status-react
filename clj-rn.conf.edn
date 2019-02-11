@@ -84,6 +84,7 @@
                    "text-encoding"
                    "js-sha3"
                    "web3-utils"
+                   "react-navigation"
                    "hi-base32"]
 
  ;; Resoures

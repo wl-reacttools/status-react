@@ -1,0 +1,10 @@
+//
+//  PR.xcconfig
+//  StatusIm
+//
+//  Created by administrator on 12/02/2019.
+//  Copyright © 2019 Facebook. All rights reserved.
+//
+CUSTOM_PRODUCT_NAME = "Status PR"
+BUNDLE_IDENTIFIER = "im.status.ethereum"
+BUNDLE_ID_SUFFIX = ".pr"

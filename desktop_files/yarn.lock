@@ -7243,7 +7243,7 @@ react-native-udp@2.2.1:
 
 "react-native@git+https://github.com/status-im/react-native-desktop.git#fix/for_status_mobile":
   version "0.57.8"
-  resolved "git+https://github.com/status-im/react-native-desktop.git#f86f731979db042b90c2d23b46f18f5d58854142"
+  resolved "git+https://github.com/status-im/react-native-desktop.git#c4f28efee07cac86a94cf04851d32370299ce409"
   dependencies:
     "@babel/runtime" "^7.0.0"
     absolute-path "^0.0.0"

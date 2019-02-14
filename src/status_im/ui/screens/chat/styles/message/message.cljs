@@ -80,9 +80,8 @@
 (defn group-message-view
   [outgoing message-type]
   (let [align (if outgoing :flex-end :flex-start)]
-    (merge {:flex 1
-            :flex-direction :column
-            :max-width      320
+    (merge {:flex-direction :column
+            :max-width      (if platform/desktop? 500 320)
             :align-items    align}
            (if outgoing
              {:margin-right 8}

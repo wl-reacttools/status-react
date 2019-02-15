@@ -26,7 +26,6 @@ in pkgs.stdenvNoCC.mkDerivation rec {
     cmake
     extra-cmake-modules
     go_1_10
-    qt5.full # Status Desktop, cannot be installed on macOS https://github.com/NixOS/nixpkgs/issues/55892
   ] ++ lib.optional isLinux [conan patchelf];
   buildInputs = with pkgs; with stdenv; [
     clojure
@@ -54,7 +53,7 @@ in pkgs.stdenvNoCC.mkDerivation rec {
       export ANDROID_NDK_HOME="$ANDROID_NDK_ROOT"
       export ANDROID_NDK="$ANDROID_NDK_ROOT"
       export PATH="$ANDROID_HOME/bin:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools:$PATH"
-      export QT_PATH="${qt5.full}"
+      unset QT_PATH
 
       [ -d "$ANDROID_NDK_ROOT" ] || ./scripts/setup # we assume that if the NDK dir does not exist, `make setup` needs to be run
   '';

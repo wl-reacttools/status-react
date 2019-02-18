@@ -26,7 +26,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules/")
 
-set(USED_QT_MODULES Core Qml Quick WebSockets Svg)
+set(USED_QT_MODULES Core Concurrent Qml Quick WebSockets Svg)
 include(QtConfiguration)
 
 set(ICON_PNG_RESOURCE_PATH "${CMAKE_SOURCE_DIR}/../deployment/status-icon.png")

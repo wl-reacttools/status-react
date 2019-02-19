@@ -15,12 +15,6 @@ if [ -z $TARGET_SYSTEM_NAME ]; then
 fi
 WINDOWS_CROSSTOOLCHAIN_PKG_NAME='mxetoolchain-x86_64-w64-mingw32'
 
-if [ -z $STATUS_NO_LOGGING ]; then
-  COMPILE_FLAGS="-DCMAKE_CXX_FLAGS:='-DBUILD_FOR_BUNDLE=1'"
-else
-  COMPILE_FLAGS="-DCMAKE_CXX_FLAGS:=-DBUILD_FOR_BUNDLE=1 -DSTATUS_NO_LOGGING=1"
-fi
-
 external_modules_dir=( \
   'node_modules/react-native-languages/desktop' \
   'node_modules/react-native-config/desktop' \
@@ -75,6 +69,18 @@ function joinExistingPath() {
     echo "$1/$2" | tr -s /
   fi
 }
+
+function join { local IFS="$1"; shift; echo "$*"; }
+
+CMAKE_EXTRA_FLAGS=$'-DCMAKE_CXX_FLAGS:=\'-DBUILD_FOR_BUNDLE=1\''
+[ -n $STATUS_NO_LOGGING ] && CMAKE_EXTRA_FLAGS="$CMAKE_EXTRA_FLAGS -DSTATUS_NO_LOGGING=1"
+is_macos && CMAKE_EXTRA_FLAGS="$CMAKE_EXTRA_FLAGS -DCMAKE_CXX_COMPILER=g++"
+if is_windows_target; then
+  CMAKE_EXTRA_FLAGS="$CMAKE_EXTRA_FLAGS -DCMAKE_TOOLCHAIN_FILE='Toolchain-Ubuntu-mingw64.cmake'"
+  CMAKE_EXTRA_FLAGS="$CMAKE_EXTRA_FLAGS -DCMAKE_C_COMPILER='x86_64-w64-mingw32.shared-gcc'"
+  CMAKE_EXTRA_FLAGS="$CMAKE_EXTRA_FLAGS -DCMAKE_CXX_COMPILER='x86_64-w64-mingw32.shared-g++'"
+  CMAKE_EXTRA_FLAGS="$CMAKE_EXTRA_FLAGS -DCMAKE_RC_COMPILER='x86_64-w64-mingw32.shared-windres'"
+fi
 
 STATUSREACTPATH="$(cd "$SCRIPTPATH" && cd '..' && pwd)"
 WORKFOLDER="$(joinExistingPath "$STATUSREACTPATH" 'StatusImPackage')"
@@ -187,24 +193,13 @@ function compile() {
         fi
         export PATH=$bin_dir:$PATH
       done <<< "$bin_dirs"
-      cmake -Wno-dev \
-            -DCMAKE_TOOLCHAIN_FILE='Toolchain-Ubuntu-mingw64.cmake' \
-            -DCMAKE_C_COMPILER='x86_64-w64-mingw32.shared-gcc' \
-            -DCMAKE_CXX_COMPILER='x86_64-w64-mingw32.shared-g++' \
-            -DCMAKE_RC_COMPILER='x86_64-w64-mingw32.shared-windres' \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DEXTERNAL_MODULES_DIR="$EXTERNAL_MODULES_DIR" \
-            -DDESKTOP_FONTS="$DESKTOP_FONTS" \
-            -DJS_BUNDLE_PATH="$JS_BUNDLE_PATH" \
-            $COMPILE_FLAGS || exit 1
-    else
-      cmake -Wno-dev \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DEXTERNAL_MODULES_DIR="$EXTERNAL_MODULES_DIR" \
-            -DDESKTOP_FONTS="$DESKTOP_FONTS" \
-            -DJS_BUNDLE_PATH="$JS_BUNDLE_PATH" \
-            $COMPILE_FLAGS || exit 1
     fi
+    cmake -Wno-dev \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DEXTERNAL_MODULES_DIR="$EXTERNAL_MODULES_DIR" \
+          -DDESKTOP_FONTS="$DESKTOP_FONTS" \
+          -DJS_BUNDLE_PATH="$JS_BUNDLE_PATH" \
+          $CMAKE_EXTRA_FLAGS || exit 1
     make -S -j5 || exit 1
   popd
 }
@@ -258,6 +253,42 @@ function bundleWindows() {
            ./deployment/windows/nsis/setup.nsi
 }
 
+if is_linux; then
+  #
+  # getRecursiveDependencies will use ldd to go through the dependencies of a library,
+  # and output those which are ELF binaries
+  #
+  declare -A treated_libs=()
+  declare -A treated_package_dirs=()
+  function getRecursiveDependencies() {
+    local args=("$@")
+    local root_lib=(${args[0]})
+    treated_libs["$root_lib"]=1
+    if program_exists 'realpath'; then
+      root_lib=$(realpath -m "$root_lib" 2> /dev/null)
+    fi
+    echo $root_lib
+
+    [ -x $root_lib ] || return
+
+    local nix_package_dep_libs=($(ldd $root_lib | grep '=>' | awk -F'=>' -F ' ' "/^.*/{print \$3}"))
+    [ ${#nix_package_dep_libs[@]} -eq 0 ] && return
+
+    local nix_package_dep_libs_dirs=$(echo ${nix_package_dep_libs[@]} | xargs dirname | xargs realpath | sort -u | uniq | grep "^/nix")
+    for packageLibDir in $nix_package_dep_libs_dirs; do
+      if ! [ ${treated_package_dirs[$packageLibDir]} ]; then
+        treated_package_dirs["$packageLibDir"]=1
+        for lib in $(ls $packageLibDir/*.so* | xargs realpath | sort | uniq); do
+          local type=$(file $lib | awk -F':' "/^.*/{print \$2}" | awk -F' ' "/^.*/{print \$1}")
+          if [ $type == 'ELF' ]; then
+            [ ${treated_libs[$lib]} ] || getRecursiveDependencies "$lib"
+          fi
+        done
+      fi
+    done
+  }
+fi
+
 function bundleLinux() {
   local QTBIN=$(joinExistingPath "$QT_PATH" 'gcc_64/bin')
   if [ ! -d "$QTBIN" ]; then
@@ -282,11 +313,11 @@ function bundleLinux() {
   popd
 
   qmakePath="$(joinExistingPath "${QTBIN}" 'qmake')"
-  usrBinPath=$(joinPath "$WORKFOLDER" "AppDir/usr/bin")
+  usrBinPath="$(joinPath "$WORKFOLDER" "AppDir/usr/bin")"
   cp -r ./deployment/linux/usr $WORKFOLDER/AppDir
   cp ./.env $usrBinPath
   cp ./desktop/bin/Status ./desktop/bin/reportApp $usrBinPath
-  
+
   if [ ! -f $DEPLOYQT ]; then
     wget --output-document="$DEPLOYQT" --show-progress "https://desktop-app-files.ams3.digitaloceanspaces.com/$DEPLOYQTFNAME" # Versioned from https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
     chmod a+x $DEPLOYQT
@@ -299,7 +330,7 @@ function bundleLinux() {
 
   rm -f Application-x86_64.AppImage Status-x86_64.AppImage
 
-  [ $VERBOSE_LEVEL -ge 1 ] && ldd $(joinExistingPath "$usrBinPath" 'Status') 
+  [ $VERBOSE_LEVEL -ge 1 ] && ldd $(joinExistingPath "$usrBinPath" 'Status')
   desktopFilePath="$(joinExistingPath "$WORKFOLDER" 'AppDir/usr/share/applications/Status.desktop')"
   pushd $WORKFOLDER
     cp -r assets/share/assets $usrBinPath
@@ -307,6 +338,12 @@ function bundleLinux() {
     rm -f $usrBinPath/Status.AppImage
   popd
 
+  # Ensure the binary isn't using the interpreter in Nix's store
+  patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 "$usrBinPath/Status"
+  # Tell linuxdeployqt about all the different lib folders in Nix's store 
+  local all_deps=($(getRecursiveDependencies "$usrBinPath/Status"))
+  local unique_folders=($(echo "${all_deps[@]}" | xargs dirname | sort -u -r | uniq | grep "/nix"))
+  LD_LIBRARY_PATH="$(join : ${unique_folders[@]})" \
   $DEPLOYQT $APPIMAGE_OPTIONS \
     $desktopFilePath \
     -verbose=$VERBOSE_LEVEL -always-overwrite -no-strip \

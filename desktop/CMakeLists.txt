@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 2.8.11)
 set(APP_NAME Status)
 set(JS_APP_NAME StatusIm)
 set(REACT_BUILD_STATIC_LIB ON)
-project(${APP_NAME} CXX)
+project(${APP_NAME} C CXX)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUNICODE -std=c++11")
 if(STATUS_NO_LOGGING)

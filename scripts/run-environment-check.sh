@@ -22,19 +22,20 @@ else
   PLATFORM=$1
 fi
 
-if ! program_version_exists node $EXPECTED_NODE_VERSION || ! program_version_exists yarn $EXPECTED_YARN_VERSION; then
-  echo -e "${YELLOW}********************************************************************************************"
+# TODO: Bring this back when the CI server starts using Nix
+# if ! program_version_exists node $EXPECTED_NODE_VERSION || ! program_version_exists yarn $EXPECTED_YARN_VERSION; then
+#   echo -e "${YELLOW}********************************************************************************************"
 
-  echo -e "The current environment doesn't contain the expected versions of node and/or yarn"
-  echo -e "  - node:\texpected\t${EXPECTED_NODE_VERSION}"
-  echo -e "  \t\tfound\t\t$(node -v) ($(which node))"
-  echo -e "  - yarn:\texpected\t${EXPECTED_YARN_VERSION}"
-  echo -e "  \t\tfound\t\t$(yarn -v) ($(which yarn))"
-  echo -e "Please open another console to reload the environment, and then run 'make setup' if necessary."
+#   echo -e "The current environment doesn't contain the expected versions of node and/or yarn"
+#   echo -e "  - node:\texpected\t${EXPECTED_NODE_VERSION}"
+#   echo -e "  \t\tfound\t\t$(node -v) ($(which node))"
+#   echo -e "  - yarn:\texpected\t${EXPECTED_YARN_VERSION}"
+#   echo -e "  \t\tfound\t\t$(yarn -v) ($(which yarn))"
+#   echo -e "Please open another console to reload the environment, and then run 'make setup' if necessary."
 
-  echo -e "**********************************************************************************************${NC}"
-  exit 1
-fi
+#   echo -e "**********************************************************************************************${NC}"
+#   exit 1
+# fi
 
 if [[ $PLATFORM == 'android' ]]; then
   if [ ! -d $ANDROID_SDK_ROOT ]; then

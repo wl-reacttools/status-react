@@ -2,8 +2,8 @@ let
   pkgs = import ((import <nixpkgs> { }).fetchFromGitHub {
     owner = "status-im";
     repo = "nixpkgs";
-    rev = "8bb4ff832fbea5230393e4d833d5cd575a39269b";
-    sha256 = "0ibqhdcc5gg9bbhjralza2n2bxknzvpdhj7gikh7s9iqw03vnfv3";
+    rev = "17bbe6570a26c98d676c6e1f1131342d36b583e7";
+    sha256 = "1wmknhy1fmi27myzg9jkd4affrxj3cyadyaxcz80fd4qiajj4sxf";
   }) { config = { }; };
   
   derivation = if pkgs.stdenv.isLinux then pkgs.stdenvNoCC.mkDerivation else pkgs.stdenv.mkDerivation;

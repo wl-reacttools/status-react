@@ -366,6 +366,27 @@ function bundleLinux() {
   echo ""
 }
 
+if is_macos; then
+  function getQtBaseBinPathFromNixStore() {
+    local qtFullDerivationPath=$(nix show-derivation -f $STATUSREACTPATH/default.nix | jq -r '.[] | .inputDrvs | 'keys' | .[]' | grep qt-full)
+    local qtBaseDerivationPath=$(nix show-derivation $qtFullDerivationPath | jq -r '.[] | .inputDrvs | 'keys' | .[]' | grep qtbase)
+
+    echo $(nix show-derivation $qtBaseDerivationPath | jq -r '.[] | .outputs.bin.path')
+  }
+
+  function copyVersionedQtLibToPackage() {
+    local qtbaseBinPath="$1"
+    local fileName="$2"
+    local targetPath="$3"
+
+    mkdir -p $targetPath
+    local srcPath=$(find $qtbaseBinPath/lib -name $fileName)
+    echo "Copying $srcPath to $targetPath"
+    cp -f "$srcPath" "$targetPath/$fileName"
+    chmod +w "$targetPath/$fileName"
+  }
+fi
+
 function bundleMacOS() {
   # download prepared package with mac bundle files (it contains qt libraries, icon)
   echo "Downloading skeleton of mac bundle..."
@@ -377,25 +398,29 @@ function bundleMacOS() {
     echo -e "${GREEN}Downloading done.${NC}"
     echo ""
     unzip ./Status.app.zip
-    cp -r assets/share/assets Status.app/Contents/Resources
-    ln -sf ../Resources/assets ../Resources/ubuntu-server ../Resources/node_modules Status.app/Contents/MacOS
-    chmod +x Status.app/Contents/Resources/ubuntu-server
-    cp ../desktop/bin/Status Status.app/Contents/MacOS/Status
-    cp ../desktop/bin/reportApp Status.app/Contents/MacOS
-    cp ../.env Status.app/Contents/Resources
-    ln -sf ../Resources/.env Status.app/Contents/MacOS/.env
-    cp -f ../deployment/macos/qt-reportApp.conf Status.app/Contents/Resources
-    ln -sf ../Resources/qt-reportApp.conf Status.app/Contents/MacOS/qt.conf
-    install_name_tool -add_rpath "@executable_path/../Frameworks" \
-                      -delete_rpath "${QT_PATH}/lib" \
-                      'Status.app/Contents/MacOS/reportApp'
-    install_name_tool -add_rpath "@executable_path/../Frameworks" \
-                      -delete_rpath "${QT_PATH}/lib" \
-                      'Status.app/Contents/MacOS/Status'
-    cp -f ../deployment/macos/Info.plist Status.app/Contents
-    cp -f ../deployment/macos/status-icon.icns Status.app/Contents/Resources
-    $DEPLOYQT Status.app -verbose=$VERBOSE_LEVEL \
-      -qmldir="$STATUSREACTPATH/node_modules/react-native/ReactQt/runtime/src/qml/"
+    local contentsPath='Status.app/Contents'
+    cp -r assets/share/assets $contentsPath/Resources
+    ln -sf ../Resources/assets ../Resources/ubuntu-server ../Resources/node_modules $contentsPath/MacOS
+    chmod +x $contentsPath/Resources/ubuntu-server
+    cp ../desktop/bin/Status $contentsPath/MacOS/Status
+    cp ../desktop/bin/reportApp $contentsPath/MacOS
+    cp ../.env $contentsPath/Resources
+    ln -sf ../Resources/.env $contentsPath/MacOS/.env
+    cp -f ../deployment/macos/qt-reportApp.conf $contentsPath/Resources
+    ln -sf ../Resources/qt-reportApp.conf $contentsPath/MacOS/qt.conf
+    cp -f ../deployment/macos/Info.plist $contentsPath
+    cp -f ../deployment/macos/status-icon.icns $contentsPath/Resources
+
+    # Since in the Nix qt.full package the different Qt modules are spread across several directories,
+    # macdeployqt cannot find some qtbase plugins, so we copy them in its place
+    local qtbaseBinPath=$(getQtBaseBinPathFromNixStore)
+    copyVersionedQtLibToPackage $qtbaseBinPath libqcocoa.dylib "$contentsPath/PlugIns/platforms/"
+    copyVersionedQtLibToPackage $qtbaseBinPath libcocoaprintersupport.dylib "$contentsPath/PlugIns/printsupport/"
+
+    $DEPLOYQT Status.app \
+      -verbose=$VERBOSE_LEVEL \
+      -qmldir="$(joinExistingPath "$STATUSREACTPATH" 'node_modules/react-native')" \
+      -qmldir="$(joinExistingPath "$STATUSREACTPATH" 'desktop/reportApp')"
     rm -f Status.app.zip
   popd
 

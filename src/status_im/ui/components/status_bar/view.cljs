@@ -16,7 +16,8 @@
           :wallet styles/view-wallet
           :wallet-tab styles/view-wallet-tab
           styles/view-default)]
-    [react/view {:style (cond-> view-style flat? (assoc :elevation 0))}]))
+(when-not platform/desktop?
+    [react/view {:style (cond-> view-style flat? (assoc :elevation 0))}])))
 
 (defn get-config [view-id]
   (get
@@ -92,6 +93,31 @@
                 network-activity-indicator-visible
                 translucent]}
         (case type
+          :main         [styles/status-bar-main styles/view-main]
+          :transparent  [styles/status-bar-transparent styles/view-transparent]
+          :modal        [styles/status-bar-modal styles/view-modal]
+          :modal-white  [styles/status-bar-modal-white styles/view-modal-white]
+          :modal-wallet [styles/status-bar-modal-wallet styles/view-modal-wallet]
+          :transaction  [styles/status-bar-transaction styles/view-transaction]
+          :wallet       [styles/status-bar-wallet styles/view-wallet]
+          :wallet-tab   [styles/status-bar-wallet-tab styles/view-wallet-tab]
+          [styles/status-bar-default styles/view-default])]
+    [react/view
+     [react/status-bar (cond-> status-bar-style flat? (assoc :elevation 0))]
+     [react/view {:style (cond-> view-style flat? (assoc :elevation 0))}]]))
+          :main         [styles/status-bar-main styles/view-main]
+          :transparent  [styles/status-bar-transparent styles/view-transparent]
+          :modal        [styles/status-bar-modal styles/view-modal]
+          :modal-white  [styles/status-bar-modal-white styles/view-modal-white]
+          :modal-wallet [styles/status-bar-modal-wallet styles/view-modal-wallet]
+          :transaction  [styles/status-bar-transaction styles/view-transaction]
+          :wallet       [styles/status-bar-wallet styles/view-wallet]
+          :wallet-tab   [styles/status-bar-wallet-tab styles/view-wallet-tab]
+          [styles/status-bar-default styles/view-default])]
+    (when-not platform/desktop?
+      [react/view
+       [react/status-bar (cond-> status-bar-style flat? (assoc :elevation 0))]
+       [react/view {:style (cond-> view-style flat? (assoc :elevation 0))}]])))
           :main styles/status-bar-main
           :modal-main styles/status-bar-main-main
           :transparent styles/status-bar-transparent

@@ -1,4 +1,4 @@
-common = load 'ci/common.groovy'
+cmn = load 'ci/common.groovy'
 ios = load 'ci/ios.groovy'
 android = load 'ci/android.groovy'
 
@@ -27,15 +27,18 @@ def podUpdate() {
   try {
     wait(lockFile)
     sh "touch ${lockFile}"
-    sh 'pod update --silent'
+    sh 'pod update --silent --no-ansi'
   } finally {
-    sh "rm ${lockFile}"
+    sh "rm -f ${lockFile}"
   }
 }
 
 def prep(type = 'nightly') {
+  //cmn.doGitRebase()
   /* ensure that we start from a known state */
-  sh 'make clean'
+  cmn.clean()
+  /* Run at start to void mismatched numbers */
+  cmn.genBuildNumber()
   /* select type of build */
   switch (type) {
     case 'nightly':
@@ -47,25 +50,23 @@ def prep(type = 'nightly') {
     default:
       sh 'cp .env.jenkins .env'; break
   }
-  common.installJSDeps('mobile')
-  sh 'cp patches/js_realm.hpp node_modules/realm/src/js_realm.hpp'
   /* install ruby dependencies */
   sh 'bundle install --quiet'
-  /* install Maven dependencies */
-  sh 'mvn -f modules/react-native-status/ios/RCTStatus dependency:unpack'
+  /* node deps and status-go download */
+  sh "make prepare-${env.BUILD_PLATFORM}"
   /* generate ios/StatusIm.xcworkspace */
-  dir('ios') {
-    podUpdate()
-    sh 'pod install --silent'
+  if (env.BUILD_PLATFORM == 'ios') {
+    dir('ios') {
+      try {
+         sh 'pod install --silent'
+      } catch (Exception ex) {
+         println "pod installation failed, trying to upgrade the repo"
+         /* only if pod install fails, we try to upgrade the repo */
+         podUpdate()
+         sh 'pod install --silent'
+      }
+    }
   }
-}
-
-def runLint() {
-  sh 'lein cljfmt check'
-}
-
-def runTests() {
-  sh 'lein test-cljs'
 }
 
 def leinBuild(platform) {

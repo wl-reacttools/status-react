@@ -1,48 +1,47 @@
-common = load 'ci/common.groovy'
+cmn = load 'ci/common.groovy'
 
-def uploadArtifact() {
-  def artifact_dir = pwd() + '/android/app/build/outputs/apk/release/'
-  println (artifact_dir + 'app-release.apk')
-  def artifact = (artifact_dir + 'app-release.apk')
-  def server = Artifactory.server('artifacts')
-  def filename = "im.status.ethereum-${GIT_COMMIT.take(6)}-n-fl.apk"
-  def newArtifact = (artifact_dir + filename)
-  sh "cp ${artifact} ${newArtifact}"
-  def uploadSpec = '{ "files": [ { "pattern": "*apk/release/' + filename + '", "target": "nightlies-local" }]}'
-  def buildInfo = server.upload(uploadSpec)
-  return 'http://artifacts.status.im:8081/artifactory/nightlies-local/' + filename
-}
-
-def compile(type = 'nightly') {
-  common.tagBuild()
-  def gradleOpt = "-PbuildUrl='${currentBuild.absoluteUrl}' "
+def bundle(type = 'nightly') {
+  /* Disable Gradle Daemon https://stackoverflow.com/questions/38710327/jenkins-builds-fail-using-the-gradle-daemon */
+  def gradleOpt = "-PbuildUrl='${currentBuild.absoluteUrl}' -Dorg.gradle.daemon=false "
   if (type == 'release') {
-    gradleOpt += "-PreleaseVersion='${common.version()}'"
+    gradleOpt += "-PreleaseVersion='${cmn.version()}'"
   }
   dir('android') {
-    sh './gradlew react-native-android:installArchives'
-    sh "./gradlew assembleRelease ${gradleOpt}"
+    withCredentials([
+      string(
+        credentialsId: 'android-keystore-pass',
+        variable: 'STATUS_RELEASE_STORE_PASSWORD'
+      ),
+      usernamePassword(
+        credentialsId: 'android-keystore-key-pass',
+        usernameVariable: 'STATUS_RELEASE_KEY_ALIAS',
+        passwordVariable: 'STATUS_RELEASE_KEY_PASSWORD'
+      )
+    ]) {
+      sh "./gradlew assembleRelease ${gradleOpt}"
+    }
   }
-  def pkg = common.pkgFilename(type, 'apk')
+  def pkg = cmn.pkgFilename(type, 'apk')
   sh "cp android/app/build/outputs/apk/release/app-release.apk ${pkg}"
   return pkg
 }
 
-def uploadToPlayStore() {
+def uploadToPlayStore(type = 'nightly') {
   withCredentials([
     string(credentialsId: "SUPPLY_JSON_KEY_DATA", variable: 'GOOGLE_PLAY_JSON_KEY'),
     string(credentialsId: "SLACK_URL", variable: 'SLACK_URL')
   ]) {
-    sh 'bundle exec fastlane android nightly'
+    sh "bundle exec fastlane android ${type}"
   }
 }
 
 def uploadToSauceLabs() {
-  def changeId = common.getParentRunEnv('CHANGE_ID')
+  def changeId = cmn.changeId()
   if (changeId != null) {
-    env.SAUCE_LABS_APK = "${changeId}.apk"
+    env.SAUCE_LABS_NAME = "${changeId}.apk"
   } else {
-    env.SAUCE_LABS_APK = "im.status.ethereum-e2e-${GIT_COMMIT.take(6)}.apk"
+    def pkg = cmn.pkgFilename(cmn.getBuildType(), 'apk')
+    env.SAUCE_LABS_NAME = "${pkg}"
   }
   withCredentials([
     string(credentialsId: 'SAUCE_ACCESS_KEY', variable: 'SAUCE_ACCESS_KEY'),
@@ -50,11 +49,11 @@ def uploadToSauceLabs() {
   ]) {
     sh 'bundle exec fastlane android saucelabs'
   }
-  return env.SAUCE_LABS_APK
+  return env.SAUCE_LABS_NAME
 }
 
 def uploadToDiawi() {
-  env.SAUCE_LABS_APK = "im.status.ethereum-e2e-${GIT_COMMIT.take(6)}.apk"
+  env.SAUCE_LABS_NAME = "im.status.ethereum-e2e-${GIT_COMMIT.take(6)}.apk"
   withCredentials([
     string(credentialsId: 'diawi-token', variable: 'DIAWI_TOKEN'),
   ]) {

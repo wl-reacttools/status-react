@@ -41,9 +41,7 @@
                           #(.openURL react/linking (http/normalize-url text))
                           #(re-frame/dispatch [:browser.ui/message-link-pressed text]))})
    :tag    (fn [text {:keys [outgoing]}]
-             {:style    {:color                (if platform/desktop?
-                                                 colors/blue
-                                                 (if outgoing colors/white colors/blue))
+             {:style    {:color                (if outgoing colors/white colors/blue)
                          :text-decoration-line :underline}
               :on-press #(re-frame/dispatch [:chat.ui/start-public-chat (subs text 1)])})})
 

@@ -156,7 +156,7 @@ RCT_EXPORT_METHOD(startNode:(NSString *)configString) {
     NSLog(@"logUrlPath %@", absLogUrl.path);
     if(![fileManager fileExistsAtPath:absLogUrl.path]) {
         NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
-        [dict setObject:[NSNumber numberWithInt:511] forKey:NSFilePosixPermissions];
+        [dict setObject:[NSNumber numberWithInt:644] forKey:NSFilePosixPermissions];
         [fileManager createFileAtPath:absLogUrl.path contents:nil attributes:dict];
     }
 
@@ -288,7 +288,7 @@ RCT_EXPORT_METHOD(verify:(NSString *)address
                       URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask]
                      lastObject];
     NSURL *absKeystoreUrl = [rootUrl URLByAppendingPathComponent:@"keystore"];
-    
+
     NSString *result = StatusgoVerifyAccountPassword(absKeystoreUrl.path, address, password);
     callback(@[result]);
 }

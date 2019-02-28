@@ -137,7 +137,7 @@
    :ios                 {:line-height min-input-height
                          :height      min-input-height
                          :left        left}
-   :destkop             {:line-height min-input-height
+   :desktop             {:line-height min-input-height
                          :height      min-input-height
                          :left        left}})
 

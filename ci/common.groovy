@@ -3,6 +3,24 @@ import hudson.model.Result
 import hudson.model.Run
 import jenkins.model.CauseOfInterruption.UserInterruption
 
+def nix_sh(cmd) {
+  sh """
+    . ~/.nix-profile/etc/profile.d/nix.sh && \\
+      nix-shell '${env.WORKSPACE}/default.nix' --run \\
+      '${cmd}'
+  """
+}
+
+def prepNixEnvironment() {
+  if (env.TARGET_PLATFORM == 'linux' || env.TARGET_PLATFORM == 'windows' || env.TARGET_PLATFORM == 'android') {
+    def glibcLocales = sh(
+      returnStdout: true,
+      script: ". ~/.nix-profile/etc/profile.d/nix.sh && nix-build --no-out-link '<nixpkgs>' -A glibcLocales"
+    ).trim()
+    env.LOCALE_ARCHIVE_2_27 = "${glibcLocales}/lib/locale/locale-archive"
+  }
+}
+
 def version() {
   return readFile("${env.WORKSPACE}/VERSION").trim()
 }
@@ -93,18 +111,20 @@ def installJSDeps(platform) {
   def maxAttempts = 10
   def installed = false
   /* prepare environment for specific platform build */
-  sh "scripts/prepare-for-platform.sh ${platform}"
+  nix_sh "scripts/prepare-for-platform.sh ${platform}"
   while (!installed && attempt <= maxAttempts) {
     println "#${attempt} attempt to install npm deps"
-    sh 'yarn install --frozen-lockfile'
+    nix_sh 'yarn install --frozen-lockfile'
     installed = fileExists('node_modules/web3/index.js')
     attemp = attempt + 1
   }
 }
 
 def doGitRebase() {
-  sh 'git status'
-  sh 'git fetch --force origin develop:develop'
+  sh """
+    git status && \\
+    git fetch --force origin develop:develop
+  """
   try {
     sh 'git rebase develop'
   } catch (e) {
@@ -228,7 +248,7 @@ def ghcmgrPostBuild(success) {
     usernameVariable: 'GHCMGR_USER',
     passwordVariable: 'GHCMGR_PASS'
   )]) {
-    sh """
+      """
       curl --silent --verbose -XPOST --data '${json}' \
         -u '${GHCMGR_USER}:${GHCMGR_PASS}' \
         -H "content-type: application/json" \
@@ -351,15 +371,15 @@ def getParentRunEnv(name) {
 }
 
 def runLint() {
-  sh 'lein cljfmt check'
+  nix_sh 'lein cljfmt check'
 }
 
 def runTests() {
-  sh 'lein test-cljs'
+  nix_sh 'lein test-cljs'
 }
 
 def clean() {
-  sh 'make clean'
+  nix_sh 'make clean'
 }
 
 return this

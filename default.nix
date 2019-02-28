@@ -26,6 +26,7 @@ let
     extra-cmake-modules
     go_1_10
     qt5.full # Status Desktop, cannot be installed on macOS https://github.com/NixOS/nixpkgs/issues/55892
+    libsForQt5.qtkeychain
   ] ++ lib.optional isLinux [conan patchelf];
 
 in with pkgs; derivation rec {

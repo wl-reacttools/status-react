@@ -7073,7 +7073,7 @@ react-native-invertible-scroll-view@1.1.0:
 
 "react-native-keychain@git+https://github.com/status-im/react-native-keychain.git#feature/nix":
   version "3.0.0-rc.3"
-  resolved "git+https://github.com/status-im/react-native-keychain.git#1fe61ddc4d5817e8b76eafd318e24ec904bd92a1"
+  resolved "git+https://github.com/status-im/react-native-keychain.git#524b8474155dcda0ec8c888f727801cd05fb9d0b"
 
 "react-native-languages@git+https://github.com/status-im/react-native-languages.git#v0.1.1-status":
   version "3.0.2"

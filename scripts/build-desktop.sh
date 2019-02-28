@@ -387,29 +387,70 @@ if is_macos; then
     cp -f "$srcPath" "$targetPath/$fileName"
     chmod +w "$targetPath/$fileName"
   }
+
+  function fixupRPathsInDylib() {
+    local dylib="$1"
+    local targetPath="$2"
+    local replacementPath="$3"
+
+    if [ $VERBOSE_LEVEL -ge 2 ]; then
+      echo "${dylib}"
+    fi
+  
+    # Walk through the dependencies of $dylib
+    local dependencies=$(otool -L "$dylib" | grep ".dylib (" | sed "s|@executable_path|$targetPath|" | awk -F "(" '{print $1}' | xargs)
+    for depDylib in $dependencies; do
+      local targetDepDylib=$(joinPath "$targetPath" "$(basename $depDylib)")
+
+      # Fix rpath and copy library to target
+      if [[ $depDylib == /nix/* ]]; then
+        if [ ! -f "$targetDepDylib" ]; then
+          echo -e "${RED}FATAL: $DEPLOYQT should have copied the dependency to ${targetPath}${NC}"
+          exit 1
+        fi
+
+        # Change dependency rpath in $dylib to point to $targetReplacementPath
+        local targetReplacementPath=$(echo $targetDepDylib | sed -e "s|$targetPath|$replacementPath|")
+        echo "${indent}Updating $dylib to point to $targetReplacementPath"
+        install_name_tool -change "$depDylib" "$targetReplacementPath" "$dylib"
+      fi
+    done
+  }
+
+  function fixupRemainingRPaths() {
+    local binPath="$1"
+    local replacementPath="$2"
+
+    for dylib in $binPath/*.dylib; do
+      fixupRPathsInDylib "$dylib" "$binPath" "$replacementPath"
+    done
+  }
 fi
 
 function bundleMacOS() {
-  # download prepared package with mac bundle files (it contains qt libraries, icon)
-  echo "Downloading skeleton of mac bundle..."
-
   pushd $WORKFOLDER
+    # download prepared package with mac bundle files (it contains qt libraries, icon)
+    echo "Downloading skeleton of mac bundle..."
+
     rm -rf Status.app
     # TODO this needs to be fixed: status-react/issues/5378
     [ -f ./Status.app.zip ] || curl -L -o Status.app.zip https://desktop-app-files.ams3.digitaloceanspaces.com/Status_20181113.app.zip
     echo -e "${GREEN}Downloading done.${NC}"
     echo ""
     unzip ./Status.app.zip
+
     local contentsPath='Status.app/Contents'
+    local usrBinPath=$(joinExistingPath "$WORKFOLDER" "$contentsPath/MacOS")
+
     cp -r assets/share/assets $contentsPath/Resources
-    ln -sf ../Resources/assets ../Resources/ubuntu-server ../Resources/node_modules $contentsPath/MacOS
+    ln -sf ../Resources/assets ../Resources/ubuntu-server ../Resources/node_modules $usrBinPath
     chmod +x $contentsPath/Resources/ubuntu-server
-    cp ../desktop/bin/Status $contentsPath/MacOS/Status
-    cp ../desktop/bin/reportApp $contentsPath/MacOS
+    cp ../desktop/bin/Status $usrBinPath/Status
+    cp ../desktop/bin/reportApp $usrBinPath
     cp ../.env $contentsPath/Resources
-    ln -sf ../Resources/.env $contentsPath/MacOS/.env
+    ln -sf ../Resources/.env $usrBinPath/.env
     cp -f ../deployment/macos/qt-reportApp.conf $contentsPath/Resources
-    ln -sf ../Resources/qt-reportApp.conf $contentsPath/MacOS/qt.conf
+    ln -sf ../Resources/qt-reportApp.conf $usrBinPath/qt.conf
     cp -f ../deployment/macos/Info.plist $contentsPath
     cp -f ../deployment/macos/status-icon.icns $contentsPath/Resources
 
@@ -423,8 +464,15 @@ function bundleMacOS() {
 
     $DEPLOYQT Status.app \
       -verbose=$VERBOSE_LEVEL \
+      -executable="$(joinExistingPath "$usrBinPath" 'reportApp')" \
       -qmldir="$(joinExistingPath "$STATUSREACTPATH" 'node_modules/react-native')" \
       -qmldir="$(joinExistingPath "$STATUSREACTPATH" 'desktop/reportApp')"
+
+    # macdeployqt doesn't fix rpaths for all the libraries (although it copies them all), so we'll just walk through them and update rpaths to not point to /nix
+    echo "Fixing remaining rpaths in modules..."
+    local frameworksPath=$(joinExistingPath "$WORKFOLDER" "$contentsPath/Frameworks")
+    fixupRemainingRPaths "$frameworksPath" "@executable_path/../Frameworks"
+    echo "Done fixing rpaths in modules"
     rm -f Status.app.zip
   popd
 

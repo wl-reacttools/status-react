@@ -2,7 +2,6 @@ import groovy.json.JsonBuilder
 
 gh = load 'ci/github.groovy'
 ci = load 'ci/jenkins.groovy'
-gh = load 'ci/github.groovy'
 utils = load 'ci/utils.groovy'
 ghcmgr = load 'ci/ghcmgr.groovy'
 
@@ -39,6 +38,16 @@ def notifyPR(success) {
       case true:  gh.NotifyPRSuccess(); break
       case false: gh.NotifyPRFailure(); break
     }
+  }
+}
+
+def prepNixEnvironment() {
+  if (env.TARGET_PLATFORM == 'linux' || env.TARGET_PLATFORM == 'windows' || env.TARGET_PLATFORM == 'android') {
+    def glibcLocales = sh(
+      returnStdout: true,
+      script: ". ~/.nix-profile/etc/profile.d/nix.sh && nix-build --no-out-link '<nixpkgs>' -A glibcLocales"
+    ).trim()
+    env.LOCALE_ARCHIVE_2_27 = "${glibcLocales}/lib/locale/locale-archive"
   }
 }
 

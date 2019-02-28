@@ -2,8 +2,7 @@ pipeline {
   agent { 
     docker {
       label 'linux'
-      /* WARNING: remember to keep this up-to-date with the value in docker/android/Makefile */
-      image 'statusteam/status-build-android:1.1.1-cd1596b3'
+      image 'statusteam/nix:jenkins'
       args (
         "-v /home/jenkins/tmp:/var/tmp:rw "+
         "-v /home/jenkins/status-im.keystore:/tmp/status-im.keystore:ro"
@@ -68,17 +67,17 @@ pipeline {
     }
     stage('Lint') {
       steps {
-        sh 'lein cljfmt check'
+        script { cmn.utils.nix_sh('lein cljfmt check') }
       }
     }
     stage('Tests') {
       steps {
-        sh 'lein test-cljs'
+        script { cmn.utils.nix_sh('lein test-cljs') }
       }
     }
     stage('Build') {
       steps {
-        sh "lein prod-build-android"
+        script { cmn.utils.nix_sh('lein prod-build-android') }
       }
     }
     stage('Bundle') {

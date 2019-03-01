@@ -4,7 +4,13 @@ import hudson.model.Run
 import jenkins.model.CauseOfInterruption.UserInterruption
 
 def nix_shell(cmd) {
-  sh "nix-shell --option extra-substituters https://nix-cache.status.im/ --trusted-public-keys 'nix-cache.status.im-1:x/93lOfLU+duPplwMSBR+OlY4+mo+dCN7n0mr4oPwgY= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=' --run '${cmd}'"
+  def configPath = "${env.HOME}/.config/nix"
+  if (!(new File(configPath+'/nix.conf')).exists()) {
+    echo 'Symlinking nix.conf for binary cache access...'
+    sh "mkdir -p ${configPath}"
+    sh "ln -sf ${env.WORKSPACE}/ci/nix.conf ${configPath}"
+  }
+  sh "nix-shell --run '${cmd}'"
 }
 
 def version() {

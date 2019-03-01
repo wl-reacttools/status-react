@@ -33,9 +33,10 @@ in with pkgs; derivation rec {
   name = "env";
   env = buildEnv { name = name; paths = buildInputs; };
   buildInputs = with stdenv; [
-    aria
+    bash
     clojure
     curl
+    git
     jq
     leiningen
     maven

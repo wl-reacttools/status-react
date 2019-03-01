@@ -3,6 +3,10 @@ import hudson.model.Result
 import hudson.model.Run
 import jenkins.model.CauseOfInterruption.UserInterruption
 
+def nix_shell(cmd) {
+  sh "nix-shell --option extra-substituters https://nix-cache.status.im/ --trusted-public-keys 'nix-cache.status.im-1:x/93lOfLU+duPplwMSBR+OlY4+mo+dCN7n0mr4oPwgY= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=' --run '${cmd}'"
+}
+
 def version() {
   return readFile("${env.WORKSPACE}/VERSION").trim()
 }
@@ -93,22 +97,21 @@ def installJSDeps(platform) {
   def maxAttempts = 10
   def installed = false
   /* prepare environment for specific platform build */
-  sh "scripts/prepare-for-platform.sh ${platform}"
+  nix_shell("scripts/prepare-for-platform.sh ${platform}")
   while (!installed && attempt <= maxAttempts) {
     println "#${attempt} attempt to install npm deps"
-    sh 'yarn install --frozen-lockfile'
+    nix_shell("yarn install --frozen-lockfile")
     installed = fileExists('node_modules/web3/index.js')
     attemp = attempt + 1
   }
 }
 
 def doGitRebase() {
-  sh 'git status'
-  sh 'git fetch --force origin develop:develop'
+  nix_shell("git status && git fetch --force origin develop:develop")
   try {
-    sh 'git rebase develop'
+    nix_shell("git rebase develop")
   } catch (e) {
-    sh 'git rebase --abort'
+    nix_shell("git rebase --abort")
     throw e
   }
 }
@@ -116,7 +119,7 @@ def doGitRebase() {
 def genBuildNumber() {
   def number = sh(
     returnStdout: true,
-    script: "./scripts/gen_build_no.sh"
+    script: "${nix_shell} --run './scripts/gen_build_no.sh'"
   ).trim()
   println "Build Number: ${number}"
   return number
@@ -366,15 +369,15 @@ def getParentRunEnv(name) {
 }
 
 def runLint() {
-  sh 'lein cljfmt check'
+  nix_shell("lein cljfmt check")
 }
 
 def runTests() {
-  sh 'lein test-cljs'
+  nix_shell("lein test-cljs")
 }
 
 def clean() {
-  sh 'make clean'
+  nix_shell("make clean")
 }
 
 return this

@@ -61,7 +61,4 @@ install_android_ndk || \
 exit $?
 
 ####
-echo && setup_header "Installing dependencies..."
-
-dependency_setup make prepare-mobile && \
 setup_complete

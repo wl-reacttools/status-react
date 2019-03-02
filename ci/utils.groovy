@@ -16,6 +16,10 @@ def getToolVersion(name) {
   return version
 }
 
+def branchName() {
+  return env.GIT_BRANCH.replace('origin/', '')
+}
+
 def parentOrCurrentBuild() {
   def c = currentBuild.rawBuild.getCause(hudson.model.Cause$UpstreamCause)
   if (c == null) { return currentBuild }

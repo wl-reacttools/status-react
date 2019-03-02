@@ -32,7 +32,7 @@ def Build(name = null, buildType = null) {
   /* default to current build type */
   buildType = buildType ? buildType : utils.getBuildType()
   /* need to drop origin/ to match definitions of child jobs */
-  def branchName = env.GIT_BRANCH.replace('origin/', '')
+  def branchName = utils.branchName()
   /* always pass the BRANCH and BUILD_TYPE params with current branch */
   def b = build(
     job: name,

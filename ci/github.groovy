@@ -103,7 +103,7 @@ def publishRelease(version, regex) {
       github-release \
         'status-im/status-react' \
         '${version}' \
-        '${env.GIT_BRANCH}' \
+        '${utils.branchName()}' \
         '${getReleaseChanges()}' \
         pkg/${regex}
     """

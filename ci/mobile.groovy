@@ -1,15 +1,15 @@
-cmn = load 'ci/common.groovy'
 ios = load 'ci/ios.groovy'
+utils = load 'ci/utils.groovy'
 android = load 'ci/android.groovy'
 
 def prep(type = 'nightly') {
   if (type != 'release') {
-    cmn.doGitRebase()
+    utils.doGitRebase()
   }
   /* ensure that we start from a known state */
-  cmn.clean()
+  sh 'make clean'
   /* Run at start to void mismatched numbers */
-  cmn.genBuildNumber()
+  utils.genBuildNumber()
   /* select type of build */
   switch (type) {
     case 'nightly':

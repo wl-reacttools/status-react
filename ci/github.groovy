@@ -1,4 +1,7 @@
 import groovy.json.JsonBuilder
+
+utils = load 'ci/utils.groovy'
+
 /**
  * Methods for interacting with GitHub API and related tools.
  **/
@@ -29,7 +32,7 @@ def notify(message) {
 def notifyFull(urls) {
   def msg = "#### :white_check_mark: "
   msg += "[${env.JOB_NAME}${currentBuild.displayName}](${currentBuild.absoluteUrl}) "
-  msg += "CI BUILD SUCCESSFUL in ${buildDuration()} (${GIT_COMMIT.take(8)})\n"
+  msg += "CI BUILD SUCCESSFUL in ${utils.buildDuration()} (${GIT_COMMIT.take(8)})\n"
   msg += '| | | | | |\n'
   msg += '|-|-|-|-|-|\n'
   msg += "| [Android](${urls.Apk}) ([e2e](${urls.Apke2e})) "
@@ -46,7 +49,7 @@ def notifyPRFailure() {
   def d = ":small_orange_diamond:"
   def msg = "#### :x: "
   msg += "[${env.JOB_NAME}${currentBuild.displayName}](${currentBuild.absoluteUrl}) ${d} "
-  msg += "${buildDuration()} ${d} ${GIT_COMMIT.take(8)} ${d} "
+  msg += "${utils.buildDuration()} ${d} ${GIT_COMMIT.take(8)} ${d} "
   msg += "[:page_facing_up: build log](${currentBuild.absoluteUrl}/consoleText)"
   //msg += "Failed in stage: ${env.STAGE_NAME}\n"
   //msg += "```${currentBuild.rawBuild.getLog(5)}```"
@@ -56,24 +59,14 @@ def notifyPRFailure() {
 def notifyPRSuccess() {
   def d = ":small_blue_diamond:"
   def msg = "#### :heavy_check_mark: "
-  def type = getBuildType() == 'e2e' ? ' e2e' : ''
+  def type = utils.getBuildType() == 'e2e' ? ' e2e' : ''
   msg += "[${env.JOB_NAME}${currentBuild.displayName}](${currentBuild.absoluteUrl}) ${d} "
-  msg += "${buildDuration()} ${d} ${GIT_COMMIT.take(8)} ${d} "
+  msg += "${utils.buildDuration()} ${d} ${GIT_COMMIT.take(8)} ${d} "
   msg += "[:package: ${env.BUILD_PLATFORM}${type} package](${env.PKG_URL})"
   notify(msg)
 }
 
 /* Releases -------------------------------------------------------*/
-
-def getVersion(type = null) {
-  /* if type is undefined we get VERSION from repo root */
-  def path = "${env.WORKSPACE}/VERSION"
-  if (type != null) {
-    path = "${env.WORKSPACE}/${type}/VERSION"
-  }
-  println "version path: ${path}"
-  return readFile(path).trim()
-}
 
 def getPrevRelease() {
   return sh(returnStdout: true,
@@ -118,7 +111,7 @@ def publishRelease(version, regex) {
 }
 
 def publishReleaseMobile() {
-  publishRelease(getVersion('mobile_files')+'-mobile', '*release.{ipa,apk}')
+  publishRelease(utils.getVersion('mobile_files')+'-mobile', '*release.{ipa,apk}')
 }
 
 return this

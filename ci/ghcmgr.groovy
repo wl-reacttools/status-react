@@ -1,4 +1,7 @@
 import groovy.json.JsonBuilder
+
+utils = load 'ci/utils.groovy'
+
 /**
  * Methods for interacting with ghcmgr API.
  * For more details see:
@@ -11,8 +14,8 @@ def buildObj(success) {
     id: env.BUILD_DISPLAY_NAME,
     commit: GIT_COMMIT.take(8),
     success: success != null ? success : true,
-    platform: env.BUILD_PLATFORM + (getBuildType() == 'e2e' ? '-e2e' : ''),
-    duration: buildDuration(),
+    platform: env.BUILD_PLATFORM + (utils.getBuildType() == 'e2e' ? '-e2e' : ''),
+    duration: utils.buildDuration(),
     url: currentBuild.absoluteUrl,
     pkg_url: env.PKG_URL,
   ]
@@ -24,7 +27,6 @@ def postBuild(success) {
    * https://github.com/status-im/github-comment-manager
    **/
   def ghcmgrurl = 'https://ghcmgr.status.im'
-  def changeId = changeId()
   def body = buildObj(success)
   def json = new JsonBuilder(body).toPrettyString()
   withCredentials([usernamePassword(
@@ -36,7 +38,7 @@ def postBuild(success) {
       curl --silent --verbose -XPOST --data '${json}' \
         -u '${GHCMGR_USER}:${GHCMGR_PASS}' \
         -H "content-type: application/json" \
-        '${ghcmgrurl}/builds/${changeId}'
+        '${ghcmgrurl}/builds/${utils.changeId()}'
     """
   }
 }

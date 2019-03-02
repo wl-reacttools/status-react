@@ -74,44 +74,92 @@ def getPrevRelease() {
   ).trim()
 }
 
+def getDiffUrl(prev, current) {
+  return "https://github.com/status-im/status-react/compare/${prev}...${current}"
+}
+
 def getReleaseChanges() {
+  def prevRelease = getPrevRelease()
+  def curRelease = utils.branchName()
   try {
-    return sh(returnStdout: true,
+    def changes = sh(returnStdout: true,
       script: """
         git log \
           --cherry-pick \
           --right-only \
           --no-merges \
           --format='* %h %s' \
-          ${getPrevRelease}..HEAD
+          ${prevRelease}..HEAD
       """
     ).trim()
   } catch (Exception ex) {
     println 'ERROR: Failed to retrieve changes.'
-    return 'Failed to retrieve changes.'
+    println ex.message
+    return ':warning: __Please fill me in!__'
   }
+  return changes + '\nDiff:' + getDiffUrl()
 }
 
-def publishRelease(version, regex) {
+def releaseDelete(Map args) {
+  sh """
+    github-release upload \
+      --replace \
+      -u '${args.user}' \
+      -r '${args.repo}' \
+      -t '${args.version}' \
+  """
+}
+
+def releaseUpload(Map args) {
+  sh """
+    github-release upload \
+      -u '${args.user}' \
+      -r '${args.repo}' \
+      -t '${args.version}' \
+      -f '${args.files}
+  """
+}
+
+def releasePublish(Map args) {
+  sh """
+    github-release release \
+      -u '${args.user}' \
+      -r '${args.repo}' \
+      -n '${args.version}' \
+      -t '${args.version}' \
+      -c '${args.branch}' \
+      -d '${args.desc}' \
+      ${args.draft ? "--draft" : ""}
+  """
+}
+
+def publishRelease(Map args) {
+  def config = [
+    draft: true,
+    user: 'status-im',
+    repo: 'status-react',
+    version: args.version,
+    branch: utils.branchName(),
+    desc: getReleaseChanges(),
+    files: "pkg/${args.regex}"
+  ]
   /* we release only for mobile right now */
   withCredentials([usernamePassword(
     credentialsId:  'status-im-auto',
     usernameVariable: 'GITHUB_USER',
     passwordVariable: 'GITHUB_TOKEN'
   )]) {
-    sh """
-      github-release \
-        'status-im/status-react' \
-        '${version}' \
-        '${utils.branchName()}' \
-        '${getReleaseChanges()}' \
-        pkg/${regex}
-    """
+    releaseDelete(config) /* so we can re-release it */
+    releasePublish(config)
+    releaseUpload(config)
   }
 }
 
 def publishReleaseMobile() {
-  publishRelease(utils.getVersion('mobile_files')+'-mobile', '*release.{ipa,apk}')
+  publishRelease(
+    version: utils.getVersion('mobile_files')+'-mobile',
+    regex: '*release.{ipa,apk}'
+  )
 }
 
 return this

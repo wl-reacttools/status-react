@@ -4,7 +4,6 @@ def getVersion(type = null) {
   if (type != null) {
     path = "${env.WORKSPACE}/${type}/VERSION"
   }
-  println "version path: ${path}"
   return readFile(path).trim()
 }
 

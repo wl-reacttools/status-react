@@ -70,8 +70,8 @@ def notifyPRSuccess() {
 
 def getPrevRelease() {
   return sh(returnStdout: true,
-    script: "git branch -a -l 'release/*' --sort=refname | tail -n1"
-  ).trim()
+    script: "git branch --format '%(refname)' '--sort 'creatordate' --list 'release/*'"
+  ).trim().split("\\r?\\n").last()
 }
 
 def getDiffUrl(prev, current) {

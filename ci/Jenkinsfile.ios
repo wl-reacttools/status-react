@@ -62,7 +62,7 @@ pipeline {
     }
     stage('Build') {
       steps { nvm(env.NODE_VERSION) {
-        script { mobile.leinBuild('ios') }
+        sh "lein prod-build-ios"
       } }
     }
     stage('Bundle') {

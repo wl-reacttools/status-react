@@ -27,8 +27,4 @@ def prep(type = 'nightly') {
   sh "make prepare-${env.BUILD_PLATFORM}"
 }
 
-def leinBuild(platform) {
-  sh "lein prod-build-${platform}"
-}
-
 return this

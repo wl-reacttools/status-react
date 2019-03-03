@@ -78,7 +78,7 @@ pipeline {
     }
     stage('Build') {
       steps {
-        script { mobile.leinBuild('android') }
+        sh "lein prod-build-android"
       }
     }
     stage('Bundle') {

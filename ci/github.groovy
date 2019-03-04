@@ -158,7 +158,7 @@ def publishRelease(Map args) {
 def publishReleaseMobile() {
   publishRelease(
     version: utils.getVersion('mobile_files')+'-mobile',
-    regex: '*release.{ipa,apk}'
+    regex: '*release.{ipa,apk,sha256}'
   )
 }
 

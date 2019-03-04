@@ -3,6 +3,21 @@ import hudson.model.Result
 import hudson.model.Run
 import jenkins.model.CauseOfInterruption.UserInterruption
 
+def sh(cmd) {
+  if (env.NIX_BUILT == null) {
+    /* we need to build deps before we can start using them */
+    dir(env.WORKSPACE) {
+      sh ". $HOME/.nix-profile && nix-build -A env"
+    }
+    env.NIX_BUILT = true
+  }
+  /* we source it every time since each sh call is a separate process */
+  sh """
+    . $HOME/.nix-profile/etc/profile.d/nix.sh && \
+    ${cmd}"
+  """
+}
+
 def version() {
   return readFile("${env.WORKSPACE}/VERSION").trim()
 }

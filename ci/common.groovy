@@ -3,7 +3,7 @@ import hudson.model.Result
 import hudson.model.Run
 import jenkins.model.CauseOfInterruption.UserInterruption
 
-def sh(cmd) {
+def nix_sh(cmd) {
   sh """
     NIX_CONF_DIR=${env.WORKSPACE}/scripts/lib/setup/nix \
       nix-shell --run '${cmd}'
@@ -100,22 +100,24 @@ def installJSDeps(platform) {
   def maxAttempts = 10
   def installed = false
   /* prepare environment for specific platform build */
-  sh "scripts/prepare-for-platform.sh ${platform}"
+  nix_sh "scripts/prepare-for-platform.sh ${platform}"
   while (!installed && attempt <= maxAttempts) {
     println "#${attempt} attempt to install npm deps"
-    sh 'yarn install --frozen-lockfile'
+    nix_sh 'yarn install --frozen-lockfile'
     installed = fileExists('node_modules/web3/index.js')
     attemp = attempt + 1
   }
 }
 
 def doGitRebase() {
-  sh 'git status'
-  sh 'git fetch --force origin develop:develop'
+  nix_sh """
+    git status &&
+    git fetch --force origin develop:develop
+  """
   try {
-    sh 'git rebase develop'
+    nix_sh 'git rebase develop'
   } catch (e) {
-    sh 'git rebase --abort'
+    nix_sh 'git rebase --abort'
     throw e
   }
 }
@@ -235,7 +237,7 @@ def ghcmgrPostBuild(success) {
     usernameVariable: 'GHCMGR_USER',
     passwordVariable: 'GHCMGR_PASS'
   )]) {
-    sh """
+      """
       curl --silent --verbose -XPOST --data '${json}' \
         -u '${GHCMGR_USER}:${GHCMGR_PASS}' \
         -H "content-type: application/json" \
@@ -373,15 +375,15 @@ def getParentRunEnv(name) {
 }
 
 def runLint() {
-  sh 'lein cljfmt check'
+  nix_sh 'lein cljfmt check'
 }
 
 def runTests() {
-  sh 'lein test-cljs'
+  nix_sh 'lein test-cljs'
 }
 
 def clean() {
-  sh 'make clean'
+  nix_sh 'make clean'
 }
 
 return this

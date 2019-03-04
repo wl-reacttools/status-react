@@ -16,7 +16,7 @@ def getToolVersion(name) {
 }
 
 def branchName() {
-  return env.GIT_BRANCH.replace('origin/', '')
+  return env.GIT_BRANCH.replaceAll(/.*origin\//, '')
 }
 
 def parentOrCurrentBuild() {

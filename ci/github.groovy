@@ -70,25 +70,27 @@ def notifyPRSuccess() {
 
 def getPrevRelease() {
   return sh(returnStdout: true,
-    script: "git branch --format '%(refname)' '--sort 'creatordate' --list 'release/*'"
-  ).trim().split("\\r?\\n").last()
+    script: "git for-each-ref --format '%(refname)' --sort=committerdate refs/remotes/origin/release"
+  ).trim().split('\\r?\\n').last()
 }
 
 def getDiffUrl(prev, current) {
+  prev = prev.replaceAll(/.*origin\//, '')
   return "https://github.com/status-im/status-react/compare/${prev}...${current}"
 }
 
 def getReleaseChanges() {
   def prevRelease = getPrevRelease()
   def curRelease = utils.branchName()
+  def changes = ''
   try {
-    def changes = sh(returnStdout: true,
+    changes = sh(returnStdout: true,
       script: """
         git log \
           --cherry-pick \
           --right-only \
           --no-merges \
-          --format='* %h %s' \
+          --format='%h %s' \
           ${prevRelease}..HEAD
       """
     ).trim()
@@ -97,13 +99,30 @@ def getReleaseChanges() {
     println ex.message
     return ':warning: __Please fill me in!__'
   }
-  return changes + '\nDiff:' + getDiffUrl()
+  /* remove single quotes to not confuse formatting */
+  changes = changes.replace('\'', '')
+  return changes + '\nDiff:' + getDiffUrl(prevRelease, curRelease)
+}
+
+def releaseExists(Map args) {
+  def output = sh(
+    returnStdout: true,
+    script: """
+      github-release info --json \
+        -u '${args.user}' \
+        -r '${args.repo}' \
+        | jq '.Releases[].tag_name'
+    """
+  )
+  return output.contains(args.version)
 }
 
 def releaseDelete(Map args) {
+  if (!releaseExists(args)) {
+    return
+  }
   sh """
-    github-release upload \
-      --replace \
+    github-release delete \
       -u '${args.user}' \
       -r '${args.repo}' \
       -t '${args.version}' \
@@ -111,13 +130,18 @@ def releaseDelete(Map args) {
 }
 
 def releaseUpload(Map args) {
-  sh """
-    github-release upload \
-      -u '${args.user}' \
-      -r '${args.repo}' \
-      -t '${args.version}' \
-      -f '${args.files}
-  """
+  dir(args.pkgDir) {
+    args.files.each {
+      sh """
+        github-release upload \
+          -u '${args.user}' \
+          -r '${args.repo}' \
+          -t '${args.version}' \
+          -n ${it} \
+          -f ${it}
+      """
+    }
+  }
 }
 
 def releasePublish(Map args) {
@@ -129,7 +153,7 @@ def releasePublish(Map args) {
       -t '${args.version}' \
       -c '${args.branch}' \
       -d '${args.desc}' \
-      ${args.draft ? "--draft" : ""}
+      ${args.draft ? '--draft' : ''}
   """
 }
 
@@ -138,10 +162,11 @@ def publishRelease(Map args) {
     draft: true,
     user: 'status-im',
     repo: 'status-react',
+    pkgDir: args.pkgDir,
+    files: args.files,
     version: args.version,
     branch: utils.branchName(),
     desc: getReleaseChanges(),
-    files: "pkg/${args.regex}"
   ]
   /* we release only for mobile right now */
   withCredentials([usernamePassword(
@@ -158,7 +183,12 @@ def publishRelease(Map args) {
 def publishReleaseMobile() {
   publishRelease(
     version: utils.getVersion('mobile_files')+'-mobile',
-    regex: '*release.{ipa,apk,sha256}'
+    pkgDir: 'pkg',
+    files: [ /* upload only mobile release files */
+      utils.pkgFilename(btype, 'ipa'),
+      utils.pkgFilename(btype, 'apk'),
+      utils.pkgFilename(btype, 'sha256'),
+    ]
   )
 }
 

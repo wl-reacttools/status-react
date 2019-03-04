@@ -91,11 +91,11 @@ pipeline {
     //}
     stage('Publish') {
       steps { script {
-        sh 'mkdir pkg'
+        sh 'mkdir -p pkg'
         dir('pkg') {
-          sh 'touch Status-123123-123123-123123.apk'
-          sh 'touch Status-123123-123123-123123.ipa'
-          sh 'sha256sum * > Status-123123-123123-123123.sha256'
+          sh "echo 'test' > ${utils.pkgFilename(btype, 'ipa')}"
+          sh "echo 'test' > ${utils.pkgFilename(btype, 'apk')}"
+          sh "sha256sum * > ${utils.pkgFilename(btype, 'sha256')}"
         }
         switch (btype) {
           case 'nightly': build('misc/status.im'); break

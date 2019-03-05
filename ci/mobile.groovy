@@ -22,13 +22,13 @@ def prep(type = 'nightly') {
       sh 'cp .env.jenkins .env'; break
   }
   /* install ruby dependencies */
-  sh 'bundle install --quiet'
+  cmn.nix_sh 'bundle install --quiet'
   /* node deps, pods, and status-go download */
-  sh "make prepare-${env.TARGET_PLATFORM}"
+  cmn.nix_sh "make prepare-${env.TARGET_PLATFORM}"
 }
 
 def leinBuild(platform) {
-  sh "lein prod-build-${platform}"
+  cmn.nix_sh "lein prod-build-${platform}"
 }
 
 return this

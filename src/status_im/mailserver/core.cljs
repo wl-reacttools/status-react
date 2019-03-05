@@ -239,6 +239,7 @@
         {:keys [peers-summary]} db
         added? (registered-peer? peers-summary
                                  address)]
+    (log/debug "mailserver: connecting to" address added?)
     (fx/merge cofx
               {:db (dissoc db :mailserver/current-request)}
               (if added?
@@ -415,6 +416,7 @@
                                              preferred-mailserver])
                                  :style   "default"}]}})
       (let [{:keys [address]} (fetch-current cofx)]
+        (log/debug "mailserver: disconnecting from" address)
         (fx/merge cofx
                   {:mailserver/remove-peer address}
                   (set-current-mailserver)
@@ -535,7 +537,7 @@
       (if (empty? error)
         (fx/merge
          cofx
-         {:mailserver/increase-limit []}
+         {:mailserver/set-limit (increase-limit)}
          (update-mailserver-topics {:request-id (:requestID event)
                                     :cursor     (:cursor event)}))
 

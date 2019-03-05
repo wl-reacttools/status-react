@@ -1,18 +1,22 @@
-{ stdenv, pkgs }:
+{ stdenv, pkgs, target-os ? "" }:
 
 with pkgs;
 with stdenv; 
 
 let
   android-ndk = callPackage ./android-ndk { };
+  targetAndroid = {
+    "android" = true;
+    "" = true;
+  }.${target-os} or false;
 
 in
   {
-    buildInputs = [
+    buildInputs = lib.optional targetAndroid [
       android-ndk
       openjdk
     ];
-    shellHook = ''
+    shellHook = if targetAndroid then ''
       export JAVA_HOME="${openjdk}"
       export ANDROID_HOME=~/.status/Android/Sdk
       export ANDROID_SDK_ROOT="$ANDROID_HOME"
@@ -20,5 +24,5 @@ in
       export ANDROID_NDK_HOME="${android-ndk}"
       export ANDROID_NDK="${android-ndk}"
       export PATH="$ANDROID_HOME/bin:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools:$PATH"
-    '';
+    '' else "";
   }

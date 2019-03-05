@@ -24,7 +24,7 @@ def prep(type = 'nightly') {
   /* install ruby dependencies */
   sh 'bundle install --quiet'
   /* node deps, pods, and status-go download */
-  sh "make prepare-${env.BUILD_PLATFORM}"
+  sh "make prepare-${env.TARGET_PLATFORM}"
 }
 
 def leinBuild(platform) {

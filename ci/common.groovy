@@ -6,7 +6,7 @@ import jenkins.model.CauseOfInterruption.UserInterruption
 def nix_sh(cmd) {
   sh """
     . ~/.nix-profile/etc/profile.d/nix.sh && \\
-      nix-shell '${env.WORKSPACE}/default.nix' --run \\
+      nix-shell '${env.WORKSPACE}/default.nix' --argstr target-os '${env.TARGET_PLATFORM}' --run \\
       '${cmd}'
   """
 }
@@ -227,7 +227,7 @@ def ghcmgrBuildObj(success) {
     id: env.BUILD_DISPLAY_NAME,
     commit: GIT_COMMIT.take(8),
     success: success != null ? success : true,
-    platform: env.BUILD_PLATFORM + (getBuildType() == 'e2e' ? '-e2e' : ''),
+    platform: env.TARGET_PLATFORM + (getBuildType() == 'e2e' ? '-e2e' : ''),
     duration: buildDuration(),
     url: currentBuild.absoluteUrl,
     pkg_url: env.PKG_URL,
@@ -311,7 +311,7 @@ def gitHubNotifyPRSuccess() {
   def type = getBuildType() == 'e2e' ? ' e2e' : ''
   msg += "[${env.JOB_NAME}${currentBuild.displayName}](${currentBuild.absoluteUrl}) ${d} "
   msg += "${buildDuration()} ${d} ${GIT_COMMIT.take(8)} ${d} "
-  msg += "[:package: ${env.BUILD_PLATFORM}${type} package](${env.PKG_URL})"
+  msg += "[:package: ${env.TARGET_PLATFORM}${type} package](${env.PKG_URL})"
   gitHubNotify(msg)
 }
 

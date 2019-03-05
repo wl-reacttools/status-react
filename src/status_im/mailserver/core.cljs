@@ -589,22 +589,22 @@
 
 (fx/defn resend-request
   [{:keys [db] :as cofx} {:keys [request-id]}]
-  (if (and (:mailserver/current-request db)
-           (<= maximum-number-of-attempts
-               (get-in db [:mailserver/current-request :attempts])))
-    (fx/merge cofx
-              {:db (update db :mailserver/current-request dissoc :attempts)}
-              (change-mailserver))
-    (if-let [mailserver (get-mailserver-when-ready cofx)]
-      (let [{:keys [topics from to cursor limit] :as request} (get db :mailserver/current-request)
-            web3 (:web3 db)]
-        (log/info "mailserver: message request " request-id "expired for mailserver topic" topics "from" from "to" to "cursor" cursor "limit" (decrease-limit))
-        {:db (update-in db [:mailserver/current-request :attempts] inc)
-         :mailserver/set-limit (decrease-limit)
-         :mailserver/request-messages {:web3 web3
-                                       :mailserver mailserver
-                                       :request (assoc request :limit (decrease-limit))}})
-      {:mailserver/set-limit (decrease-limit)})))
+  (when (:mailserver/current-request db)
+    (if (and (<= maximum-number-of-attempts
+                 (get-in db [:mailserver/current-request :attempts])))
+      (fx/merge cofx
+                {:db (update db :mailserver/current-request dissoc :attempts)}
+                (change-mailserver))
+      (if-let [mailserver (get-mailserver-when-ready cofx)]
+        (let [{:keys [topics from to cursor limit] :as request} (get db :mailserver/current-request)
+              web3 (:web3 db)]
+          (log/info "mailserver: message request " request-id "expired for mailserver topic" topics "from" from "to" to "cursor" cursor "limit" (decrease-limit))
+          {:db (update-in db [:mailserver/current-request :attempts] inc)
+           :mailserver/set-limit (decrease-limit)
+           :mailserver/request-messages {:web3 web3
+                                         :mailserver mailserver
+                                         :request (assoc request :limit (decrease-limit))}})
+        {:mailserver/set-limit (decrease-limit)}))))
 
 (fx/defn initialize-mailserver
   [cofx custom-mailservers]

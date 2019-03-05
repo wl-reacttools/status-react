@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+set -x
 
 VERBOSE_LEVEL=${VERBOSE_LEVEL:-1}
 

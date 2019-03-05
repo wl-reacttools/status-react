@@ -10,6 +10,7 @@
             [status-im.ui.components.toolbar.styles :as styles]
             [status-im.utils.platform :as platform]
             [status-im.utils.core :as utils]
+            [status-im.ui.components.colors :as colors]
             [status-im.ui.components.common.common :as components.common]))
 
 ;; Navigation item
@@ -130,20 +131,29 @@
              [icon-action icon icon-opts handler])
        {:key (str "action-" (or image icon))}))])
 
+(defn separator
+  "TODO: refactor when implementing top bar component"
+  []
+  [react/view {:style {:height 1
+                       :background-color colors/gray-lighter}}])
+
 (defn toolbar
   ([props nav-item content-item] (toolbar props nav-item content-item nil))
   ([{:keys [background-color style flat?]}
     nav-item
     content-item
     action-items]
-   [react/view {:style (merge (styles/toolbar background-color flat?) style)}
-    [react/view styles/ios-content-item
-     content-item]
-    (when nav-item
-      [react/view {:style styles/toolbar-nav-actions-container}
-       nav-item])
-    [react/view components.styles/flex]
-    action-items]))
+   [react/view {:style {:flex-direction :column}}
+    [react/view {:style (merge (styles/toolbar background-color)
+                               style)}
+     [react/view styles/ios-content-item
+      content-item]
+     (when nav-item
+       [react/view {:style styles/toolbar-nav-actions-container}
+        nav-item])
+     [react/view components.styles/flex]
+     action-items]
+    [separator]]))
 
 (defn platform-agnostic-toolbar
   ([props nav-item content-item] (platform-agnostic-toolbar props nav-item content-item [actions [{:image :blank}]]))
@@ -151,12 +161,15 @@
     nav-item
     content-item
     action-items]
-   [react/view {:style (merge (styles/toolbar background-color flat?) style)}
-    (when nav-item
-      [react/view {:style (styles/toolbar-nav-actions-container 0)}
-       nav-item])
-    content-item
-    action-items]))
+   [react/view {:style {:flex-direction :column}}
+    [react/view {:style (merge (styles/toolbar background-color)
+                               style)}
+     (when nav-item
+       [react/view {:style (styles/toolbar-nav-actions-container 0)}
+        nav-item])
+     content-item
+     action-items]
+    [separator]]))
 
 (defn simple-toolbar
   "A simple toolbar composed of a nav-back item and a single line title."

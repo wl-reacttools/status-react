@@ -37,8 +37,7 @@
                                   (animation/timing anim-x (easing-out 0))])]))))}
     [react/view {:style {:width parent-width
                          :position :absolute
-                         :top -3
-                         :elevation 2
+                         :top -4
                          :height 3
                          :background-color colors/white}}
      [react/animated-view {:style {:margin-left anim-x

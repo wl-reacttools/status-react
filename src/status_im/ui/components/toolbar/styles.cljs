@@ -7,15 +7,13 @@
 (def toolbar-icon-height 24)
 (def toolbar-icon-spacing 24)
 
-(defnstyle toolbar [background-color flat?]
+(defnstyle toolbar [background-color]
   (cond->
    {:flex            0
     :flex-direction  :row
     :align-items     :center
     :justify-content :space-between
-    :elevation       (if flat? 0 2)
-    :android         {:height 55}
-    :ios             {:height 56}}
+    :height          55}
 
     background-color
     (assoc :background-color background-color)))

@@ -136,7 +136,10 @@ def doGitRebase() {
 def genBuildNumber() {
   def number = sh(
     returnStdout: true,
-    script: ". ~/.nix-profile/etc/profile.d/nix.sh && ./scripts/gen_build_no.sh"
+    script: """. ~/.nix-profile/etc/profile.d/nix.sh && \\
+      nix-shell '${env.WORKSPACE}/default.nix' --argstr target-os '${env.TARGET_PLATFORM}' --run \\
+      ./scripts/gen_build_no.sh
+    """
   ).trim()
   println "Build Number: ${number}"
   return number

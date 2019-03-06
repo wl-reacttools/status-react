@@ -25,6 +25,7 @@
            :LogEnabled false)
     (assoc config
            :LogLevel log-level
+           :LogMobileSystem true
            :LogEnabled true)))
 
 (defn get-network-genesis-hash-prefix

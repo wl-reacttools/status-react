@@ -43,7 +43,7 @@
 (defn nav-text
   ([text] (nav-text nil text))
   ([{:keys [handler] :as props} text]
-   [react/text (utils/deep-merge {:style    (merge styles/item styles/item-text)
+   [react/text (utils/deep-merge {:style    styles/item-text
                                   :on-press (or handler #(re-frame/dispatch [:navigate-back]))}
                                  props)
     text]))
@@ -75,7 +75,7 @@
 ;; Content
 
 (defn content-wrapper [content]
-  [react/view {:style styles/toolbar-container}
+  [react/view {:style {:flex 1}}
    content])
 
 (defn content-title
@@ -87,7 +87,9 @@
   ([title-style title subtitle-style subtitle additional-text-props]
    [react/view {:style styles/toolbar-title-container}
     [react/text (merge {:style (merge styles/toolbar-title-text title-style)
-                        :font :toolbar-title :numberOfLines 1 :ellipsizeMode :tail}
+                        :font :toolbar-title
+                        :numberOfLines 1
+                        :ellipsizeMode :tail}
                        additional-text-props) title]
     (when subtitle
       [react/text {:style subtitle-style}
@@ -96,29 +98,34 @@
 ;; Actions
 
 (defn text-action [{:keys [style handler disabled? accessibility-label]} title]
-  [react/text (cond-> {:style      (merge styles/item styles/item-text style
-                                          (when disabled? styles/toolbar-text-action-disabled))
-                       :on-press   (when-not disabled? handler)
+  [react/text (cond-> {:style (merge styles/item-text
+                                     style
+                                     (when disabled?
+                                       styles/toolbar-text-action-disabled))
+                       :on-press   (when-not disabled?
+                                     handler)
                        :uppercase? true}
                 accessibility-label
                 (assoc :accessibility-label accessibility-label))
    title])
 
-(def blank-action [react/view {:style (merge styles/item styles/toolbar-action)}])
+(def blank-action [react/view {:style {:flex 1}}])
 
 (defn- icon-action [icon {:keys [overlay-style] :as icon-opts} handler]
-  [react/touchable-highlight {:on-press handler}
-   [react/view {:style (merge styles/item styles/toolbar-action)}
+  [react/touchable-highlight {:on-press handler
+                              :style {:width 24
+                                      :height 24}}
+   [react/view
     (when overlay-style
       [react/view overlay-style])
-    [vector-icons/icon icon (merge {:container-style styles/action-default} icon-opts)]]])
+    [vector-icons/icon icon icon-opts]]])
 
 (defn- option-actions [icon icon-opts options]
   [icon-action icon icon-opts
    #(list-selection/show {:options options})])
 
 (defn actions [v]
-  [react/view {:style styles/toolbar-actions}
+  [react/view {:style {:flex-direction :row}}
    (for [{:keys [image icon icon-opts options handler]} v]
      (with-meta
        (cond (= image :blank)
@@ -133,46 +140,120 @@
 
 (defn separator
   "TODO: refactor when implementing top bar component"
-  []
+  [separator-color]
   [react/view {:style {:height 1
-                       :background-color colors/gray-lighter}}])
+                       :background-color (or separator-color
+                                             colors/gray-lighter)}}])
 
+;;TODO remove
 (defn toolbar
   ([props nav-item content-item] (toolbar props nav-item content-item nil))
-  ([{:keys [background-color style flat?]}
+  ([{:keys [style separator-color transparent? browser?]}
     nav-item
     content-item
     action-items]
-   [react/view {:style {:flex-direction :column}}
-    [react/view {:style (merge (styles/toolbar background-color)
+   [react/view {:style (cond-> {:height styles/toolbar-height}
+                         ;; i.e. for qr code scanner
+                         transparent?
+                         (assoc :background-color :transparent
+                                :z-index          1))}
+    [react/view {:style (merge {:height 55
+                                :flex   1}
                                style)}
-     [react/view styles/ios-content-item
-      content-item]
+     (when content-item
+       (if browser?
+         content-item
+         [react/view {:position         :absolute
+                      :left             88
+                      :right            88
+                      :height           55
+                      :justify-content  :center
+                      :align-items      :center}
+          content-item]))
      (when nav-item
-       [react/view {:style styles/toolbar-nav-actions-container}
+       [react/view {:style {:position        :absolute
+                            :left            16
+                            :height          55
+                            :justify-content :center
+                            :align-items     :center}}
         nav-item])
-     [react/view components.styles/flex]
-     action-items]
-    [separator]]))
+     [react/view {:position :absolute
+                  :right 16
+                  :height 55
+                  :justify-content  :center
+                  :align-items      :center}
+      action-items]]
+    (when-not transparent?
+      [separator separator-color])]))
 
-(defn platform-agnostic-toolbar
-  ([props nav-item content-item] (platform-agnostic-toolbar props nav-item content-item [actions [{:image :blank}]]))
-  ([{:keys [background-color style flat?]}
-    nav-item
-    content-item
-    action-items]
-   [react/view {:style {:flex-direction :column}}
-    [react/view {:style (merge (styles/toolbar background-color)
-                               style)}
-     (when nav-item
-       [react/view {:style (styles/toolbar-nav-actions-container 0)}
-        nav-item])
-     content-item
-     action-items]
-    [separator]]))
-
+;;TODO remove
 (defn simple-toolbar
   "A simple toolbar composed of a nav-back item and a single line title."
   ([] (simple-toolbar nil))
   ([title] (simple-toolbar title false))
   ([title modal?] (toolbar nil (if modal? default-nav-close default-nav-back) [content-title title])))
+
+(defn top-bar-content
+  [title subtitle]
+  [react/view {:style styles/toolbar-title-container}
+   [react/text {:style styles/toolbar-title-text
+                :font :toolbar-title
+                :numberOfLines 1
+                :ellipsizeMode :tail}
+    title]
+   (when subtitle
+     [react/text {:style {}}
+      subtitle])])
+
+;;TODO replace toolbar with this
+;;TODO WIP
+(defn regular-top-bar
+  [{:keys [title
+           text-link
+           icon
+           second-icon
+           subtitle
+           modal-close
+           private-chat
+           group-chat
+           separator-color]}]
+  [react/view {:style {:height styles/toolbar-height}}
+   [react/view {:style {:height 55
+                        :flex   1}}
+    [react/view {:position         :absolute
+                 :left             88
+                 :right            88
+                 :height           55
+                 :justify-content  :center
+                 :align-items      :center}
+     [top-bar-content title subtitle]]
+    (if modal-close
+      ;;TODO modal-close
+      [react/view]
+      [react/view {:style {:position        :absolute
+                           :left            16
+                           :height          55
+                           :justify-content :center
+                           :align-items     :center}}
+       nav-item])
+    (when icon
+      [react/view {:position :absolute
+                   :right 16
+                   :height 55
+                   :justify-content  :center
+                   :align-items      :center}
+       [icon-action icon]])
+    (when second-icon
+      [react/view {:position :absolute
+                   :right 40
+                   :height 55
+                   :justify-content  :center
+                   :align-items      :center}
+       [icon-action second-icon]])]
+   [separator separator-color]])
+
+;;TODO handle browser differently (url bar instead of text ask Maciej)
+(defn browser-top-bar [])
+
+;;TODO not used yet can be done later
+(defn big-top-bar [])

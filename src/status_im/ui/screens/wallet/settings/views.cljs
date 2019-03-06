@@ -44,11 +44,14 @@
             all-tokens     [:wallet/all-tokens]]
     [react/view (merge components.styles/flex {:background-color :white})
      [status-bar/status-bar {:type :modal-wallet}]
-     [toolbar/toolbar {:style wallet.styles/toolbar}
-      [toolbar/nav-text {:handler             #(do (re-frame/dispatch [:update-wallet])
-                                                   (re-frame/dispatch [:navigate-back]))
-                         :style               {:color colors/white}
-                         :accessibility-label :done-button}
+     [toolbar/toolbar
+      {:separator-color colors/white-light-transparent}
+      [toolbar/nav-text
+       ;;TODO: this needs to be refactored in a single event handler
+       {:handler             #(do (re-frame/dispatch [:update-wallet])
+                                  (re-frame/dispatch [:navigate-back]))
+        :style               {:color colors/white}
+        :accessibility-label :done-button}
        (i18n/label :t/done)]
       [toolbar/content-title {:color colors/white}
        (i18n/label :t/wallet-assets)]]
@@ -65,11 +68,15 @@
             {address :address}   [:account/account]]
     [react/keyboard-avoiding-view {:style {:flex 1 :background-color colors/blue}}
      [status-bar/status-bar {:type :wallet}]
-     [toolbar/toolbar {:style wallet.styles/toolbar}
-      [toolbar/nav-button (actions/back-white #(do (when on-close
-                                                     (re-frame/dispatch (on-close (create-payload address))))
-                                                   (re-frame/dispatch [:update-wallet])
-                                                   (re-frame/dispatch [:navigate-back])))]
+     [toolbar/toolbar
+      {:separator-color colors/white-light-transparent}
+      [toolbar/nav-button
+       (actions/back-white
+        ;;TODO: this needs to be refactored in a single event handler
+        #(do (when on-close
+               (re-frame/dispatch (on-close (create-payload address))))
+             (re-frame/dispatch [:update-wallet])
+             (re-frame/dispatch [:navigate-back])))]
       [toolbar/content-title {:color colors/white}
        label]]
      [view (create-payload address)]]))
@@ -84,7 +91,7 @@
 (defview toolbar-view []
   (letsubs [settings           [:wallet/settings]
             {address :address} [:account/account]]
-    [toolbar/toolbar {:style wallet.styles/toolbar :flat? true}
+    [toolbar/toolbar {:separator-color colors/white-light-transparent}
      nil
      [toolbar/content-wrapper]
      [toolbar/actions

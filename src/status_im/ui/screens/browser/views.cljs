@@ -31,7 +31,7 @@
 
 (defn toolbar-content [url url-original {:keys [secure?]} url-editing?]
   (let [url-text (atom url)]
-    [react/view
+    [react/view {:flex 1}
      [react/view (styles/toolbar-content false)
       [react/touchable-highlight {:on-press #(re-frame/dispatch [:browser.ui/lock-pressed secure?])}
        (if secure?
@@ -56,7 +56,8 @@
                         :options (wallet.actions/actions browser-id)}))
 
 (defn toolbar [error? url url-original browser browser-id url-editing?]
-  [toolbar.view/toolbar {}
+  [toolbar.view/toolbar
+   {:browser? true}
    [toolbar.view/nav-button-with-count
     (actions/close (fn []
                      (re-frame/dispatch [:navigate-to :home])

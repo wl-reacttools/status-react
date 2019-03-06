@@ -28,16 +28,15 @@
             [status-im.utils.universal-links.core :as universal-links]))
 
 (defn my-profile-toolbar []
-  [toolbar/toolbar {}
+  [toolbar/toolbar
+   {}
    nil
-   [toolbar/content-title ""]
+   nil
    [react/touchable-highlight
     {:on-press            #(re-frame/dispatch [:my-profile/start-editing-profile])
      :accessibility-label :edit-button}
-    [react/view
-     [react/text {:style      common.styles/label-action-text
-                  :uppercase? true}
-      (i18n/label :t/edit)]]]])
+    [react/text {:style common.styles/label-action-text}
+     (i18n/label :t/edit)]]])
 
 (defn my-profile-edit-toolbar [on-show]
   (reagent/create-class

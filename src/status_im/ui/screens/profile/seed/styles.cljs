@@ -10,6 +10,8 @@
 
 (def intro-image
   {:padding-bottom 10
+   :width  248
+   :height 233
    :align-items    :center})
 
 (def intro-text

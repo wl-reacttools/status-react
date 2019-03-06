@@ -47,16 +47,18 @@
      [status-bar/status-bar {:flat? true}]
      (when (= :account-creating step)
        [react/view styles/account-creating-view
-        [react/view styles/account-creating-logo-container
-         [components.common/logo styles/account-creating-logo]]
+        [toolbar/toolbar nil nil nil]
+        [react/view styles/logo-container
+         [components.common/logo styles/logo]]
         [react/view {:style styles/account-creating-indicatior}
          [components/activity-indicator {:animating true}]
          [react/text {:style styles/account-creating-text}
           (i18n/label :t/creating-your-account)]]])
      (when (#{:enter-password :confirm-password :enter-name} step)
        [react/view components.styles/flex
-        [toolbar/toolbar {:flat? true} (when (#{:enter-password :confirm-password} step)
-                                         (toolbar/nav-button (actions/back #(re-frame/dispatch [:accounts.create.ui/step-back-pressed step])))) nil]
+        [toolbar/toolbar nil
+         (when (#{:enter-password :confirm-password} step)
+           (toolbar/nav-button (actions/back #(re-frame/dispatch [:accounts.create.ui/step-back-pressed step])))) nil]
         [react/view {:style styles/logo-container}
          [components.common/logo styles/logo]]
         ^{:key (str "step" step)}

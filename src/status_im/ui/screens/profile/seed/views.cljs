@@ -38,8 +38,8 @@
 (defn intro []
   [react/view {:style styles/intro-container}
    (when-not platform/desktop?
-     [components.common/image-contain {:container-style styles/intro-image}
-      (:lock resources/ui)])
+     [react/image {:source (:lock resources/ui)
+                   :style styles/intro-image}])
    [react/i18n-text {:style styles/intro-text
                      :key   :your-data-belongs-to-you}]
    [react/i18n-text {:style styles/intro-description
@@ -150,7 +150,6 @@
         (i18n/label :t/backup-recovery-phrase)]
        [react/text {:style styles/step-n}
         (i18n/label :t/step-i-of-n {:step (steps-numbers step) :number 3})]]]
-     [components.common/separator]
      (case step
        :intro [intro]
        :12-words [twelve-words current-account]

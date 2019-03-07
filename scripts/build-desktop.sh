@@ -84,7 +84,17 @@ fi
 
 STATUSREACTPATH="$(cd "$SCRIPTPATH" && cd '..' && pwd)"
 WORKFOLDER="$(joinExistingPath "$STATUSREACTPATH" 'StatusImPackage')"
+DEPLOYQTFNAME='linuxdeployqt-continuous-x86_64_20181215.AppImage'
+APPIMAGETOOLFNAME='appimagetool-x86_64_20190221.AppImage'
+DEPLOYQT=$(joinPath . "$DEPLOYQTFNAME")
+APPIMAGETOOL=$(joinPath . "$APPIMAGETOOLFNAME")
 STATUSIM_APPIMAGE_ARCHIVE="StatusImAppImage_20181208.zip"
+
+APPIMAGE_OPTIONS=""
+if [[ ! -c /dev/fuse ]]; then # doesn't exist when run under docker
+    # We extract it to avoid having to use fuse and privileged mode in docker
+    APPIMAGE_OPTIONS="--appimage-extract-and-run"
+fi
 
 function init() {
   if [ -z $STATUSREACTPATH ]; then
@@ -295,6 +305,16 @@ function bundleLinux() {
   cp -r ./deployment/linux/usr $WORKFOLDER/AppDir
   cp ./.env $usrBinPath
   cp ./desktop/bin/Status ./desktop/bin/reportApp $usrBinPath
+  
+  if [ ! -f $DEPLOYQT ]; then
+    wget --output-document="$DEPLOYQT" --show-progress "https://desktop-app-files.ams3.digitaloceanspaces.com/$DEPLOYQTFNAME" # Versioned from https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+    chmod a+x $DEPLOYQT
+  fi
+
+  if [ ! -f $APPIMAGETOOL ]; then
+    wget --output-document="$APPIMAGETOOL" --show-progress "https://desktop-app-files.ams3.digitaloceanspaces.com/$APPIMAGETOOLFNAME" # Versioned from https://github.com/AppImage/AppImageKit/releases/download/10/appimagetool-x86_64.AppImage
+    chmod a+x $APPIMAGETOOL
+  fi
 
   rm -f Application-x86_64.AppImage Status-x86_64.AppImage
 
@@ -316,7 +336,7 @@ function bundleLinux() {
   fi
 
   LD_LIBRARY_PATH="$(join : ${unique_folders[@]})" \
-  linuxdeployqt \
+  $DEPLOYQT $APPIMAGE_OPTIONS \
     $desktopFilePath \
     -verbose=$VERBOSE_LEVEL -always-overwrite -no-strip \
     -no-translations -bundle-non-qt-libs \
@@ -329,11 +349,7 @@ function bundleLinux() {
 
   pushd $WORKFOLDER
     rm -f $usrBinPath/Status.AppImage
-    appimagetool ./AppDir
-    if [ ${#unique_folders[@]} -gt 0 ]; then
-      # Ensure the AppImage isn't using the interpreter in Nix's store
-      patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 ./Status-x86_64.AppImage
-    fi
+    $APPIMAGETOOL $APPIMAGE_OPTIONS ./AppDir
     [ $VERBOSE_LEVEL -ge 1 ] && ldd $usrBinPath/Status
     rm -rf Status.AppImage
   popd

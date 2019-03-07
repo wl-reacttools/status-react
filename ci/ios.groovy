@@ -29,7 +29,7 @@ def bundle(type) {
     string(credentialsId: 'APPLE_ID', variable: 'APPLE_ID'),
     string(credentialsId: 'fastlane-match-password', variable:'MATCH_PASSWORD')
   ]) {
-    cmn.nix_sh "bundle exec fastlane ios ${target}"
+    sh "bundle exec fastlane ios ${target}"
   }
   /* rename built file for uploads and archivization */
   def pkg = ''

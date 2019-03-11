@@ -27,8 +27,7 @@
   (when platform/android?
     (dialog/show options))
   (when platform/desktop?
-    (show-desktop-menu (->> (:options options) (remove nil?))))
-  )
+    (show-desktop-menu (->> (:options options) (remove nil?)))))
 
 (defn chat-message [message-id old-message-id text dialog-title]
   (show {:title       dialog-title

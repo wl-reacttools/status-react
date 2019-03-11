@@ -24,60 +24,24 @@
             [status-im.ui.screens.chat.stickers.views :as stickers]))
 
 (defview basic-text-input [{:keys [set-container-width-fn height single-line-input?]}]
-         (letsubs [{:keys [input-text]} [:chats/current-chat]
-                   cooldown-enabled?    [:chats/cooldown-enabled?]]
-                  [react/text-input
-                   (merge
-                     {:ref                    #(when % (re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-ref %}]))
-                      :accessibility-label    :chat-message-input
-                      :multiline              (not single-line-input?)
-                      :default-value          (or input-text "")
-                      :editable               (not cooldown-enabled?)
-                      :blur-on-submit         false
-                      :on-focus               #(re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-focused?    true
-                                                                                               :show-stickers?    false
-                                                                                               :messages-focused? false}])
-                      :on-blur                #(re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-focused? false}])
-                      :on-submit-editing      #(when single-line-input?
-                                                 (re-frame/dispatch [:chat.ui/send-current-message]))
-                      :on-layout              #(set-container-width-fn (.-width (.-layout (.-nativeEvent %))))
-                      :on-change              #(re-frame/dispatch [:chat.ui/set-chat-input-text (.-text (.-nativeEvent %))])
-                      :on-selection-change    #(let [s (-> (.-nativeEvent %)
-                                                           (.-selection))
-                                                     end (.-end s)]
-                                                 (re-frame/dispatch [:chat.ui/set-chat-ui-props {:selection end}]))
-                      :style                  (style/input-view single-line-input?)
-                      :placeholder-text-color colors/gray
-                      :auto-capitalize        :sentences}
-                     (when cooldown-enabled?
-                       {:placeholder (i18n/label :cooldown/text-input-disabled)}))]))
-
-(defview basic-text-input-desktop [{:keys [set-container-width-fn height single-line-input?]}]
-  (letsubs [cooldown-enabled?    [:chats/cooldown-enabled?]]
-     (let [component               (reagent/current-component)
-           set-text #(reagent/set-state component {:state-text %})
-           {:keys [state-text]} (reagent/state component)
-           ]
+  (letsubs [{:keys [input-text]} [:chats/current-chat]
+            cooldown-enabled?    [:chats/cooldown-enabled?]]
     [react/text-input
      (merge
       {:ref                    #(when % (re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-ref %}]))
        :accessibility-label    :chat-message-input
        :multiline              (not single-line-input?)
-       :default-value          state-text
+       :default-value          (or input-text "")
        :editable               (not cooldown-enabled?)
        :blur-on-submit         false
        :on-focus               #(re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-focused?    true
                                                                                 :show-stickers?    false
                                                                                 :messages-focused? false}])
        :on-blur                #(re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-focused? false}])
-       :submit-shortcut        {:key "Enter"}
-       :on-submit-editing      #(do
-                                  (re-frame/dispatch [:chat.ui/set-chat-input-text state-text])
-                                  (re-frame/dispatch [:chat.ui/send-current-message])
-                                  (set-text ""))
+       :on-submit-editing      #(when single-line-input?
+                                  (re-frame/dispatch [:chat.ui/send-current-message]))
        :on-layout              #(set-container-width-fn (.-width (.-layout (.-nativeEvent %))))
-       :on-change              #(set-text (.-text (.-nativeEvent %)))
-       :on-end-editing         #(re-frame/dispatch [:chat.ui/set-chat-input-text state-text])
+       :on-change              #(re-frame/dispatch [:chat.ui/set-chat-input-text (.-text (.-nativeEvent %))])
        :on-selection-change    #(let [s (-> (.-nativeEvent %)
                                             (.-selection))
                                       end (.-end s)]
@@ -86,7 +50,42 @@
        :placeholder-text-color colors/gray
        :auto-capitalize        :sentences}
       (when cooldown-enabled?
-        {:placeholder (i18n/label :cooldown/text-input-disabled)}))])))
+        {:placeholder (i18n/label :cooldown/text-input-disabled)}))]))
+
+(defview basic-text-input-desktop [{:keys [set-container-width-fn height single-line-input?]}]
+  (letsubs [cooldown-enabled?    [:chats/cooldown-enabled?]]
+    (let [component               (reagent/current-component)
+          set-text #(reagent/set-state component {:state-text %})
+          {:keys [state-text]} (reagent/state component)]
+      [react/text-input
+       (merge
+        {:ref                    #(when % (re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-ref %}]))
+         :accessibility-label    :chat-message-input
+         :multiline              (not single-line-input?)
+         :default-value          state-text
+         :editable               (not cooldown-enabled?)
+         :blur-on-submit         false
+         :on-focus               #(re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-focused?    true
+                                                                                  :show-stickers?    false
+                                                                                  :messages-focused? false}])
+         :on-blur                #(re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-focused? false}])
+         :submit-shortcut        {:key "Enter"}
+         :on-submit-editing      #(do
+                                    (re-frame/dispatch [:chat.ui/set-chat-input-text state-text])
+                                    (re-frame/dispatch [:chat.ui/send-current-message])
+                                    (set-text ""))
+         :on-layout              #(set-container-width-fn (.-width (.-layout (.-nativeEvent %))))
+         :on-change              #(set-text (.-text (.-nativeEvent %)))
+         :on-end-editing         #(re-frame/dispatch [:chat.ui/set-chat-input-text state-text])
+         :on-selection-change    #(let [s (-> (.-nativeEvent %)
+                                              (.-selection))
+                                        end (.-end s)]
+                                    (re-frame/dispatch [:chat.ui/set-chat-ui-props {:selection end}]))
+         :style                  (style/input-view single-line-input?)
+         :placeholder-text-color colors/gray
+         :auto-capitalize        :sentences}
+        (when cooldown-enabled?
+          {:placeholder (i18n/label :cooldown/text-input-disabled)}))])))
 
 (defview invisible-input [{:keys [set-layout-width-fn value]}]
   (letsubs [{:keys [input-text]} [:chats/current-chat]]
@@ -132,10 +131,9 @@
         [invisible-input {:set-layout-width-fn set-layout-width-fn}]
         (if platform/desktop?
           [basic-text-input-desktop {:set-container-width-fn set-container-width-fn
-                             :single-line-input?     single-line-input?}]
+                                     :single-line-input?     single-line-input?}]
           [basic-text-input {:set-container-width-fn set-container-width-fn
-                             :single-line-input?     single-line-input?}]
-        )
+                             :single-line-input?     single-line-input?}])
         [input-helper {:width width}]]])))
 
 (defview commands-button []

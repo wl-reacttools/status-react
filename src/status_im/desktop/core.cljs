@@ -18,20 +18,20 @@
 (defn app-root [props]
   (let [keyboard-height (subscribe [:get :keyboard-height])]
     (reagent/create-class
-      {:component-will-mount
-                       (fn []
-                         (.addEventListener react/app-state "change" app-state-change-handler))
-       :component-did-mount
-                       (fn [this]
-                         (dispatch [:set-initial-props (reagent/props this)]))
-       :component-will-unmount
-                       (fn []
-                         (.stop react/http-bridge)
-                         (.removeEventListener react/app-state "change" app-state-change-handler))
-       :display-name "root"
-       :reagent-render views/main})))
+     {:component-will-mount
+      (fn []
+        (.addEventListener react/app-state "change" app-state-change-handler))
+      :component-did-mount
+      (fn [this]
+        (dispatch [:set-initial-props (reagent/props this)]))
+      :component-will-unmount
+      (fn []
+        (.stop react/http-bridge)
+        (.removeEventListener react/app-state "change" app-state-change-handler))
+      :display-name "root"
+      :reagent-render views/main})))
 
 (defn init []
   (core/init app-root)
   ;(snoopy/subscribe!)
-  )
+)

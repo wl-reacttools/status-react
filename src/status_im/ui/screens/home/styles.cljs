@@ -27,8 +27,7 @@
    :width          72
    :android        {:height 76}
    :ios            {:height 74}
-   :desktop        {:height 74}
-   })
+   :desktop        {:height 74}})
 
 (def browser-icon-container
   {:width            40

@@ -44,8 +44,13 @@ if is_linux && [ -z "$CI_ENVIRONMENT" ]; then
     sudo sysctl -p
   fi
 
-  # Arch Linux
-  sudo sysctl kernel.unprivileged_userns_clone=1
+  if [ -f "/etc/arch-release" ]; then
+    # Arch Linux
+    local userns=$(sysctl -n kernel.unprivileged_userns_clone)
+    if [ "$userns" != '1' ]; then
+      sudo sysctl kernel.unprivileged_userns_clone=1
+    fi
+  fi
 fi
 
 ####

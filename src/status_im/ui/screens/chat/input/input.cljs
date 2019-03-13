@@ -52,40 +52,44 @@
       (when cooldown-enabled?
         {:placeholder (i18n/label :cooldown/text-input-disabled)}))]))
 
-(defview basic-text-input-desktop [{:keys [set-container-width-fn height single-line-input?]}]
+(defview basic-text-input-desktop [{:keys [set-container-width-fn height single-line-input? set-text state-text]}]
   (letsubs [cooldown-enabled?    [:chats/cooldown-enabled?]]
-    (let [component               (reagent/current-component)
-          set-text #(reagent/set-state component {:state-text %})
-          {:keys [state-text]} (reagent/state component)]
-      [react/text-input
-       (merge
-        {:ref                    #(when % (re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-ref %}]))
-         :accessibility-label    :chat-message-input
-         :multiline              (not single-line-input?)
-         :default-value          state-text
-         :editable               (not cooldown-enabled?)
-         :blur-on-submit         false
-         :on-focus               #(re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-focused?    true
-                                                                                  :show-stickers?    false
-                                                                                  :messages-focused? false}])
-         :on-blur                #(re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-focused? false}])
-         :submit-shortcut        {:key "Enter"}
-         :on-submit-editing      #(do
-                                    (re-frame/dispatch [:chat.ui/set-chat-input-text state-text])
-                                    (re-frame/dispatch [:chat.ui/send-current-message])
-                                    (set-text ""))
-         :on-layout              #(set-container-width-fn (.-width (.-layout (.-nativeEvent %))))
-         :on-change              #(set-text (.-text (.-nativeEvent %)))
-         :on-end-editing         #(re-frame/dispatch [:chat.ui/set-chat-input-text state-text])
-         :on-selection-change    #(let [s (-> (.-nativeEvent %)
-                                              (.-selection))
-                                        end (.-end s)]
-                                    (re-frame/dispatch [:chat.ui/set-chat-ui-props {:selection end}]))
-         :style                  (style/input-view single-line-input?)
-         :placeholder-text-color colors/gray
-         :auto-capitalize        :sentences}
-        (when cooldown-enabled?
-          {:placeholder (i18n/label :cooldown/text-input-disabled)}))])))
+    ;(let [component               (reagent/current-component)
+    ;      set-text #(reagent/set-state component {:state-text %})
+    ;      {:keys [state-text]} (reagent/state component)]
+    [react/text-input
+     (merge
+      {:ref                    #(when % (re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-ref %}]))
+       :accessibility-label    :chat-message-input
+       :multiline              (not single-line-input?)
+       :default-value          state-text
+       :editable               (not cooldown-enabled?)
+       :blur-on-submit         false
+       :on-focus               #(re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-focused?    true
+                                                                                :show-stickers?    false
+                                                                                :messages-focused? false}])
+       :on-blur                #(re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-focused? false}])
+       :submit-shortcut        {:key "Enter"}
+       :on-submit-editing      #(do
+                                  (re-frame/dispatch [:chat.ui/set-chat-input-text state-text])
+                                  (re-frame/dispatch [:chat.ui/send-current-message])
+                                  (set-text ""))
+       :on-layout              #(set-container-width-fn (.-width (.-layout (.-nativeEvent %))))
+       :on-change              #(do
+                                  (set-text (.-text (.-nativeEvent %)))
+                                    ;(re-frame/dispatch [:chat.ui/set-chat-input-text state-text])
+)
+       :on-end-editing         #(re-frame/dispatch [:chat.ui/set-chat-input-text state-text])
+       :on-selection-change    #(let [s (-> (.-nativeEvent %)
+                                            (.-selection))
+                                      end (.-end s)]
+                                  (re-frame/dispatch [:chat.ui/set-chat-ui-props {:selection end}]))
+       :style                  (style/input-view single-line-input?)
+       :placeholder-text-color colors/gray
+       :auto-capitalize        :sentences}
+      (when cooldown-enabled?
+        {:placeholder (i18n/label :cooldown/text-input-disabled)}))]))
+;)
 
 (defview invisible-input [{:keys [set-layout-width-fn value]}]
   (letsubs [{:keys [input-text]} [:chats/current-chat]]
@@ -120,7 +124,7 @@
     :number {:keyboard-type "numeric"}
     nil))
 
-(defview input-view [{:keys [single-line-input?]}]
+(defview input-view [{:keys [single-line-input? set-text state-text]}]
   (letsubs [command [:chats/selected-chat-command]]
     (let [component              (reagent/current-component)
           set-layout-width-fn    #(reagent/set-state component {:width %})
@@ -131,7 +135,9 @@
         [invisible-input {:set-layout-width-fn set-layout-width-fn}]
         (if platform/desktop?
           [basic-text-input-desktop {:set-container-width-fn set-container-width-fn
-                                     :single-line-input?     single-line-input?}]
+                                     :single-line-input?     single-line-input?
+                                     :set-text set-text
+                                     :state-text state-text}]
           [basic-text-input {:set-container-width-fn set-container-width-fn
                              :single-line-input?     single-line-input?}])
         [input-helper {:width width}]]])))
@@ -174,7 +180,13 @@
             {:keys [input-text]} [:chats/current-chat]
             result-box           [:chats/current-chat-ui-prop :result-box]
             show-stickers?       [:chats/current-chat-ui-prop :show-stickers?]]
-    (let [single-line-input? (:singleLineInput result-box)]
+    (let [single-line-input? (:singleLineInput result-box)
+          component               (reagent/current-component)
+          set-text #(reagent/set-state component {:state-text %})
+          {:keys [state-text]} (reagent/state component)
+          input-text-empty? (if platform/desktop?
+                              (string/blank? state-text)
+                              (string/blank? input-text))]
       [react/view {:style     (style/root margin)
                    :on-layout #(let [h (-> (.-nativeEvent %)
                                            (.-layout)
@@ -183,12 +195,14 @@
                                    (re-frame/dispatch [:chat.ui/set-chat-ui-props {:input-height h}])))}
        [reply-message-view]
        [react/view {:style style/input-container}
-        [input-view {:single-line-input? single-line-input?}]
-        (when (and config/stickers-enabled? (string/blank? input-text))
+        [input-view {:single-line-input? single-line-input? :set-text set-text :state-text state-text}]
+        (when (and config/stickers-enabled? input-text-empty?)
           [stickers/button show-stickers?])
-        (if (string/blank? input-text)
+        (if input-text-empty?
           [commands-button]
-          [send-button/send-button-view])]])))
+          (if platform/desktop?
+            [send-button/send-button-view {:input-text state-text}]
+            [send-button/send-button-view {:input-text input-text}]))]])))
 
 (defn container []
   [react/view

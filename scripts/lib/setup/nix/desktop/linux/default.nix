@@ -5,7 +5,6 @@ with stdenv;
 
 let
   baseImage = callPackage ./base-image { };
-  appimagekit = callPackage ./appimagekit { };
   linuxdeployqt = callPackage ./linuxdeployqt { inherit appimagekit; };
 
 in

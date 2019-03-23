@@ -2,8 +2,8 @@
 { pkgs ? import ((import <nixpkgs> { }).fetchFromGitHub {
     owner = "status-im";
     repo = "nixpkgs";
-    rev = "15623aac6e8cbfa24d4268195bc8eda7303ea2ff";
-    sha256 = "0crjmspk65rbpkl3kqcj7433355i9fy530lhc48g2cz75xjk4sxh";
+    rev = "cd988a2e9e511d44c6373ba867ad304a70194ca3";
+    sha256 = "1xvlv27jb5sxaf15slz3y3pcc4bl1wf39m4zhkryn66n6m8c26rz";
   }) { config = { }; },
   target-os ? "" }:
 

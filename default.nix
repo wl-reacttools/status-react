@@ -20,8 +20,7 @@ with pkgs;
       "ios" = true;
       "" = true;
     }.${target-os} or false;
-    # TODO: Try to use stdenv for iOS. The problem is with building iOS as the build is trying to pass parameters to Apple's ld that are meant for GNU's ld (e.g. -dynamiclib)
-    _stdenv = if target-os == "ios" || target-os == "" then stdenvNoCC else stdenv;
+    _stdenv = if target-os == "ios" || target-os == "" then clangStdenv else stdenv;
     statusDesktop = callPackage ./scripts/lib/setup/nix/desktop { inherit target-os; stdenv = _stdenv; };
     statusMobile = callPackage ./scripts/lib/setup/nix/mobile { inherit target-os; stdenv = _stdenv; };
     nodeInputs = import ./scripts/lib/setup/nix/global-node-packages/output {

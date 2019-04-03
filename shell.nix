@@ -12,6 +12,12 @@ let
   # TODO: Try to use stdenv for iOS. The problem is with building iOS as the build is trying to pass parameters to Apple's ld that are meant for GNU's ld (e.g. -dynamiclib)
   _stdenv = stdenvNoCC;
   _mkShell = mkShell.override { stdenv = _stdenv; };
+  _fastlane = fastlane.override {
+    bundlerEnv = _: pkgs.bundlerEnv { 
+      name = "fastlane-gems";
+      gemdir = ./fastlane;
+    };
+  };
 
 in _mkShell {
   buildInputs = [
@@ -25,7 +31,7 @@ in _mkShell {
     ps # used in scripts/start-react-native.sh
     unzip
     wget
-  ] ++ lib.optional targetMobile [ bundler ruby ]; # bundler/ruby used for fastlane
+  ] ++ lib.optional targetMobile _fastlane;
   inputsFrom = [ projectDeps ];
   shellHook =
     ''
@@ -33,6 +39,8 @@ in _mkShell {
     '' +
     projectDeps.shellHook +
     ''
+      export FASTLANE_PLUGINFILE_PATH=$PWD/fastlane/Pluginfile
+
       if [ -n "$ANDROID_SDK_ROOT" ] && [ ! -d "$ANDROID_SDK_ROOT" ]; then
         ./scripts/setup # we assume that if the Android SDK dir does not exist, make setup needs to be run
       fi

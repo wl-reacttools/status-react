@@ -72,8 +72,6 @@ def prep(type = 'nightly') {
   if (env.TARGET_PLATFORM == 'android' || env.TARGET_PLATFORM == 'ios') {
     /* Run at start to void mismatched numbers */
     utils.genBuildNumber()
-    /* install ruby dependencies */
-    utils.nix_sh 'bundle install --quiet'
   }
 
   def prepareTarget=env.TARGET_PLATFORM

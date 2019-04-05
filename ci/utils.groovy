@@ -26,6 +26,17 @@ def nix_sh(cmd) {
   """
 }
 
+def nix_fastlane_sh(cmd) {
+  sh """
+    set +x
+    . ~/.nix-profile/etc/profile.d/nix.sh
+    set -x
+    nix-shell --argstr target-os \'${env.TARGET_PLATFORM}\' \\
+              --run \'\$FASTLANE_SCRIPT ${cmd}\' \\
+              \'${env.WORKSPACE}/shell.nix\'
+  """
+}
+
 def branchName() {
   return env.GIT_BRANCH.replaceAll(/.*origin\//, '')
 }

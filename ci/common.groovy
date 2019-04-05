@@ -50,6 +50,11 @@ def prepNixEnvironment() {
     ).trim()
     env.LOCALE_ARCHIVE_2_27 = "${glibcLocales}/lib/locale/locale-archive"
   }
+
+  utils.nix_sh 'printenv'
+  if (env.TARGET_PLATFORM == 'ios' || env.TARGET_PLATFORM == 'android') {
+    utils.nix_fastlane_sh 'env'
+  }
 }
 
 def prep(type = 'nightly') {

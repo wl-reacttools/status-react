@@ -35,7 +35,7 @@ def bundle(type) {
       passwordVariable: 'FASTLANE_PASSWORD'
     ),
   ]) {
-    utils.nix_sh "fastlane ios ${target}"
+    utils.nix_fastlane_sh "ios ${target}"
   }
   /* rename built file for uploads and archivization */
   def pkg = ''
@@ -58,7 +58,7 @@ def uploadToDiawi() {
   withCredentials([
     string(credentialsId: 'diawi-token', variable: 'DIAWI_TOKEN'),
   ]) {
-    utils.nix_sh 'fastlane ios upload_diawi'
+    utils.nix_fastlane_sh 'ios upload_diawi'
   }
   diawiUrl = readFile "${env.WORKSPACE}/fastlane/diawi.out"
   return diawiUrl
@@ -75,7 +75,7 @@ def uploadToSauceLabs() {
     string(credentialsId: 'SAUCE_ACCESS_KEY', variable: 'SAUCE_ACCESS_KEY'),
     string(credentialsId: 'SAUCE_USERNAME', variable: 'SAUCE_USERNAME'),
   ]) {
-    utils.nix_sh 'fastlane ios saucelabs'
+    utils.nix_fastlane_sh 'ios saucelabs'
   }
   return env.SAUCE_LABS_NAME
 }

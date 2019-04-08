@@ -17,7 +17,8 @@
             [status-im.accounts.login.core :as accounts.login]
             [status-im.accounts.recover.core :as accounts.recover]
             [status-im.models.wallet :as models.wallet]
-            [status-im.utils.ethereum.mnemonic :as mnemonic]))
+            [status-im.utils.ethereum.mnemonic :as mnemonic]
+            [status-im.accounts.logout.core :as accounts.logout]))
 
 (def default-pin "000000")
 
@@ -436,18 +437,21 @@
 
 (fx/defn on-delete-success
   [{:keys [db] :as cofx}]
-  (fx/merge cofx
-            {:db                              (-> db
-                                                  (assoc-in [:hardwallet :secrets] nil)
-                                                  (assoc-in [:hardwallet :application-info] nil)
-                                                  (assoc-in [:hardwallet :on-card-connected] nil)
-                                                  (assoc-in [:hardwallet :pin] {:status      nil
-                                                                                :error-label nil
-                                                                                :on-verified nil}))
-             :utils/show-popup                {:title   ""
-                                               :content (i18n/label :t/card-reseted)}}
-            (remove-pairing-from-account {:remove-instance-uid? true})
-            (navigation/navigate-to-cofx :keycard-settings nil)))
+  (let [account-address (get-in db [:account/account :address])]
+    (fx/merge cofx
+              {:db                 (-> db
+                                       (update :accounts/accounts dissoc account-address)
+                                       (assoc-in [:hardwallet :secrets] nil)
+                                       (assoc-in [:hardwallet :application-info] nil)
+                                       (assoc-in [:hardwallet :on-card-connected] nil)
+                                       (assoc-in [:hardwallet :pin] {:status      nil
+                                                                     :error-label nil
+                                                                     :on-verified nil}))
+               :data-store/base-tx [(accounts-store/delete-account-tx account-address)]
+               :utils/show-popup   {:title   ""
+                                    :content (i18n/label :t/card-reseted)}}
+
+              (accounts.logout/logout))))
 
 (fx/defn on-delete-error
   [{:keys [db] :as cofx} error]

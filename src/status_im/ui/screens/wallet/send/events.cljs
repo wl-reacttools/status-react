@@ -122,16 +122,21 @@
 (handlers/register-handler-fx
  ::hash-message-completed
  (fn [{:keys [db] :as cofx} [_ {:keys [result error]}]]
-   (let [db' (assoc-in db [:wallet :send-transaction :in-progress?] false)]
+   (let [db' (assoc-in db [:wallet :send-transaction :in-progress?] false)
+         method (get-in db [:navigation/screen-params :wallet-sign-message-modal :method])]
      (if error
        ;; ERROR
        (models.wallet/handle-transaction-error (assoc cofx :db db') error)
        ;; RESULT
-       (fx/merge cofx
-                 {:db (-> db
-                          (assoc-in [:hardwallet :pin :enter-step] :sign)
-                          (assoc-in [:hardwallet :hash] result))}
-                 (navigation/navigate-to-cofx :enter-pin nil))))))
+       (if (= method constants/web3-keycard-sign-pinless)
+         (fx/merge cofx
+                   {:db (assoc-in db [:hardwallet :hash] result)}
+                   (hardwallet/sign-pinless))
+         (fx/merge cofx
+                   {:db (-> db
+                            (assoc-in [:hardwallet :pin :enter-step] :sign)
+                            (assoc-in [:hardwallet :hash] result))}
+                   (navigation/navigate-to-cofx :enter-pin nil)))))))
 
 ;; DISCARD TRANSACTION
 (handlers/register-handler-fx

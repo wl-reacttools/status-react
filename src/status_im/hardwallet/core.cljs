@@ -754,6 +754,17 @@
                 {:db (assoc-in db [:hardwallet :on-card-connected] :hardwallet/sign)}
                 (navigation/navigate-to-cofx :hardwallet-connect nil)))))
 
+(fx/defn sign-pinless
+  [{:keys [db] :as cofx}]
+  (let [card-connected? (get-in db [:hardwallet :card-connected?])
+        hash (get-in db [:hardwallet :hash])]
+    (if card-connected?
+      {:db                      (assoc-in db [:hardwallet :card-read-in-progress?] true)
+       :hardwallet/sign-pinless {:hash (ethereum/naked-address hash)}}
+      (fx/merge cofx
+                {:db (assoc-in db [:hardwallet :on-card-connected] :hardwallet/sign-pinless)}
+                (navigation/navigate-to-cofx :hardwallet-connect nil)))))
+
 ; PIN enter steps:
 ; login - PIN is used to login
 ; sign - PIN for transaction sign

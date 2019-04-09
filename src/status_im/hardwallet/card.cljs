@@ -162,3 +162,11 @@
         (sign pairing pin hash)
         (then #(re-frame/dispatch [:hardwallet.callback/on-sign-success %]))
         (catch #(re-frame/dispatch [:hardwallet.callback/on-sign-error (error-object->map %)])))))
+
+(defn sign-pinless
+  [{:keys [hash]}]
+  (when hash
+    (.. keycard
+        (signPinless hash)
+        (then #(re-frame/dispatch [:hardwallet.callback/on-sign-success %]))
+        (catch #(re-frame/dispatch [:hardwallet.callback/on-sign-error (error-object->map %)])))))

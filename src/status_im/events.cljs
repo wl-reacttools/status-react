@@ -1368,6 +1368,11 @@
  (fn [cofx _]
    (hardwallet/sign cofx)))
 
+(handlers/register-handler-fx
+ :hardwallet/sign-pinless
+ (fn [cofx _]
+   (hardwallet/sign-pinless cofx)))
+
 ;; browser module
 
 (handlers/register-handler-fx

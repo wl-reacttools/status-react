@@ -32,7 +32,7 @@ def nix_fastlane_sh(cmd) {
     . ~/.nix-profile/etc/profile.d/nix.sh
     set -x
     nix-shell --argstr target-os \'${env.TARGET_PLATFORM}\' \\
-              --pure --run \'ruby --version && fastlane --version && \$FASTLANE_SCRIPT --version && \$FASTLANE_SCRIPT ${cmd}\' \\
+              --pure --run \'export LC_ALL=en_US.UTF-8 && export LANG=en_US.UTF-8 && ruby --version && fastlane --version && \$FASTLANE_SCRIPT --version && \$FASTLANE_SCRIPT ${cmd}\' \\
               \'${env.WORKSPACE}/shell.nix\'
   """
 }

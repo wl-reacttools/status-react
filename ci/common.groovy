@@ -52,9 +52,9 @@ def prepNixEnvironment() {
   }
 
   utils.nix_sh 'printenv'
-  if (env.TARGET_PLATFORM == 'ios' || env.TARGET_PLATFORM == 'android') {
-    utils.nix_fastlane_sh 'env'
-  }
+  // if (env.TARGET_PLATFORM == 'ios' || env.TARGET_PLATFORM == 'android') {
+  //   utils.nix_fastlane_sh 'env'
+  // }
 }
 
 def prep(type = 'nightly') {

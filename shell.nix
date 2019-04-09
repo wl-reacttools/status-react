@@ -41,7 +41,6 @@ in _mkShell {
     ''
       export FASTLANE_PLUGINFILE_PATH=$PWD/fastlane/Pluginfile
       export FASTLANE_SCRIPT="${_fastlane}/bin/fastlane" # the ruby package also exposes the fastlane Gem, so we want to make sure we don't rely on PATH ordering to get the right package
-      unset BUNDLE_PATH
 
       if [ -n "$ANDROID_SDK_ROOT" ] && [ ! -d "$ANDROID_SDK_ROOT" ]; then
         ./scripts/setup # we assume that if the Android SDK dir does not exist, make setup needs to be run

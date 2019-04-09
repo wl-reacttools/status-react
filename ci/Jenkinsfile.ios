@@ -30,7 +30,7 @@ pipeline {
     NIX_CONF_DIR = "${env.WORKSPACE}/nix"
     FASTLANE_DISABLE_COLORS=1
     REALM_DISABLE_ANALYTICS=1
-    BUNDLE_PATH = "${HOME}/.bundle"
+    BUNDLE_PATH = "${HOME}/.bundle/2.5.5"
   }
 
   stages {

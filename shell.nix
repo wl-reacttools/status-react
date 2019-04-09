@@ -12,7 +12,7 @@ let
   # TODO: Try to use stdenv for iOS. The problem is with building iOS as the build is trying to pass parameters to Apple's ld that are meant for GNU's ld (e.g. -dynamiclib)
   _stdenv = stdenvNoCC;
   _mkShell = mkShell.override { stdenv = _stdenv; };
-  _fastlane = fastlane.override {
+  _fastlane = callPackage ./fastlane {
     bundlerEnv = _: pkgs.bundlerEnv { 
       name = "fastlane-gems";
       gemdir = ./fastlane;

@@ -209,7 +209,7 @@
 (def ^:const web3-personal-sign "personal_sign")
 (def ^:const web3-sign-typed-data "eth_signTypedData")
 (def ^:const web3-sign-typed-data-v3 "eth_signTypedData_v3")
-(def ^:const web3-keycard-sign-pinless "personal_keycardSignPinless")
+(def ^:const web3-keycard-sign-pinless "personal_signMessagePinless")
 
 (def ^:const web3-get-logs "eth_getLogs")
 (def ^:const web3-transaction-receipt "eth_getTransactionReceipt")

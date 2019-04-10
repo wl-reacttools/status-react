@@ -129,7 +129,9 @@
            :dispatch          [:navigate-back]}
 
     (constants/web3-sign-message? method)
-    (assoc :dispatch (if keycard? [:navigate-to :browser] [:navigate-back]))
+    (assoc :dispatch (if (or keycard?
+                             (= method constants/web3-keycard-sign-pinless))
+                       [:navigate-to :browser] [:navigate-back]))
 
     (= method constants/web3-send-transaction)
     (assoc :dispatch [:navigate-to-clean :wallet-transaction-sent-modal])))

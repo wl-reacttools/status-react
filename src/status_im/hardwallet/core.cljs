@@ -1195,7 +1195,7 @@
                     (get-in db [:navigation/screen-params :wallet-sign-message-modal :method]))]
     (if pinless?
       {:utils/show-popup {:title   (i18n/label :t/error)
-                          :content (i18n/label :t/something-went-wrong)}}
+                          :content (str error)}}
       (fx/merge cofx
                 {:db (update-in db [:hardwallet :pin] merge {:status      :error
                                                              :sign        []

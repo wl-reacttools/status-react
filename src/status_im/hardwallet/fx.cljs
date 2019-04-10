@@ -82,6 +82,10 @@
  card/sign)
 
 (re-frame/reg-fx
+ :hardwallet/sign-pinless
+ card/sign-pinless)
+
+(re-frame/reg-fx
  :hardwallet/login-with-keycard
  statusgo/login-with-keycard)
 

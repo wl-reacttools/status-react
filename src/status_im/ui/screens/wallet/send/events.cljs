@@ -370,9 +370,10 @@
 (handlers/register-handler-fx
  :wallet.ui/sign-message-button-clicked
  (fn [{:keys [db]} [_ typed? screen-params password-error-cb]]
-   (let [{:keys [data from password]} screen-params
+   (let [{:keys [data from password method]} screen-params
          keycard-account? (boolean (get-in db [:account/account :keycard-instance-uid]))]
-     (if keycard-account?
+     (if (or keycard-account?
+             (= method constants/web3-keycard-sign-pinless))
        (if typed?
          {::hash-typed-data {:data         data
                              :on-completed #(re-frame/dispatch [::hash-message-completed (types/json->clj %)])}}

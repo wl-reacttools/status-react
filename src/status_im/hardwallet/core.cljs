@@ -1191,9 +1191,14 @@
 (fx/defn on-sign-error
   [{:keys [db] :as cofx} error]
   (log/debug "[hardwallet] sign error: " error)
-  (fx/merge cofx
-            {:db (update-in db [:hardwallet :pin] merge {:status      :error
-                                                         :sign        []
-                                                         :error-label :t/pin-mismatch})}
-            (navigation/navigate-to-cofx :enter-pin nil)
-            (get-application-info (get-pairing db) nil)))
+  (let [pinless? (= status-im.constants/web3-keycard-sign-pinless
+                    (get-in db [:navigation/screen-params :wallet-sign-message-modal :method]))]
+    (if pinless?
+      {:utils/show-popup {:title   (i18n/label :t/error)
+                          :content (i18n/label :t/something-went-wrong)}}
+      (fx/merge cofx
+                {:db (update-in db [:hardwallet :pin] merge {:status      :error
+                                                             :sign        []
+                                                             :error-label :t/pin-mismatch})}
+                (navigation/navigate-to-cofx :enter-pin nil)
+                (get-application-info (get-pairing db) nil)))))

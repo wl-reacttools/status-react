@@ -196,8 +196,8 @@
                                   :signing-phrase signing-phrase
                                   :keycard?       keycard?}]
                (if (= method constants/web3-keycard-sign-pinless)
-                 {:db       db'
-                  :dispatch [:wallet.ui/sign-message-button-clicked]}
+                 {:db       (assoc-in db' [:navigation/screen-params :wallet-sign-message-modal :method] method)
+                  :dispatch [:wallet.ui/sign-message-button-clicked false {:method method} #()]}
                  (navigation/navigate-to-cofx {:db db'} :wallet-sign-message-modal screen-params)))
              {:db db'})))))))
 

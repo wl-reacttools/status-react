@@ -87,8 +87,14 @@ end
 #    if true  - only fetch existing certificates and profiles, don't upgrade from AppStoreConnect
 #    if false - read list of devices from AppStoreConnect, and upgrade the provisioning profiles from it
 def build_ios_adhoc(config, readonly)
+    app_id = case config
+      when "Release" then "im.status.ethereum"
+      when "PR"      then "im.status.ethereum.pr"
+      when "Debug"   then "im.status.ethereum.debug"
+    end
     match(
         type: "adhoc",
+        app_identifier: app_id,
         force_for_new_devices: true,
         readonly: readonly,
         keychain_name: "login.keychain"

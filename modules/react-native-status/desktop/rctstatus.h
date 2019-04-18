@@ -46,6 +46,7 @@ public:
     Q_INVOKABLE void verify(QString address, QString password, double callbackId);
     Q_INVOKABLE void sendTransaction(QString txArgsJSON, QString password, double callbackId);
     Q_INVOKABLE void signMessage(QString rpcParams, double callbackId);
+    Q_INVOKABLE void signHash(QString hash, double callbackId);
     Q_INVOKABLE void signGroupMembership(QString content, double callbackId);
     Q_INVOKABLE void extractGroupMembershipSignatures(QString signatures, double callbackId);
     Q_INVOKABLE void enableInstallation(QString installationId, double callbackId);

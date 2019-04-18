@@ -49,6 +49,9 @@
 (defn sign-message [rpcParams callback]
   (native-module/sign-message rpcParams callback))
 
+(defn private-sign-hash [hash callback]
+  (native-module/private-sign-hash hash callback))
+
 (defn sign-typed-data [data password callback]
   (native-module/sign-typed-data data password callback))
 

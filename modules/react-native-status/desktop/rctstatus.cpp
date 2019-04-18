@@ -310,6 +310,16 @@ void RCTStatus::signMessage(QString rpcParams, double callbackId) {
         }, rpcParams, callbackId);
 }
 
+void RCTStatus::signHash(QString hash, double callbackId) {
+  Q_D(RCTStatus);
+  qCDebug(RCTSTATUS) << "::signHash call - callbackId:" << callbackId;
+  QtConcurrent::run([&](QString hash, double callbackId) {
+          const char* result = SignHash(hash.toUtf8().data());
+          logStatusGoResult("::signHash SignHash", result);
+          d->bridge->invokePromiseCallback(callbackId, QVariantList{result});
+      }, hash, callbackId);
+}
+
 void RCTStatus::signGroupMembership(QString content, double callbackId) {
     Q_D(RCTStatus);
     qCDebug(RCTSTATUS) << "::signGroupMembership - callbackId:" << callbackId;

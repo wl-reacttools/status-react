@@ -389,6 +389,18 @@ RCT_EXPORT_METHOD(signMessage:(NSString *)message
 }
 
 ////////////////////////////////////////////////////////////////////
+#pragma mark - SignHash
+//////////////////////////////////////////////////////////////////// signHash
+RCT_EXPORT_METHOD(signHash:(NSString *)hash
+                  callback:(RCTResponseSenderBlock)callback) {
+#if DEBUG
+    NSLog(@"SignHash() method called");
+#endif
+                                                                                      NSString *result = StatusgoSignHash(hash);
+                                                                                      callback(@[result]);
+}
+
+////////////////////////////////////////////////////////////////////
 #pragma mark - SignTypedData
 //////////////////////////////////////////////////////////////////// signTypedData
 RCT_EXPORT_METHOD(signTypedData:(NSString *)data

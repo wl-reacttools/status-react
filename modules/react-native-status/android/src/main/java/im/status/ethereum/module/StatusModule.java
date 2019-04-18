@@ -759,8 +759,8 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
     }
 
     @ReactMethod
-    public void signMessage(final String rpcParams, final Callback callback) {
-        Log.d(TAG, "signMessage");
+    public void signHash(final String hash, final Callback callback) {
+        Log.d(TAG, "signHash");
         if (!checkAvailability()) {
             callback.invoke(false);
             return;
@@ -769,10 +769,29 @@ class StatusModule extends ReactContextBaseJavaModule implements LifecycleEventL
         Runnable r = new Runnable() {
             @Override
             public void run() {
-                String res = Statusgo.signMessage(rpcParams);
+                String res = Statusgo.signHash(hash);
                 callback.invoke(res);
             }
         };
+
+        StatusThreadPoolExecutor.getInstance().execute(r);
+    }
+
+    @ReactMethod
+    public void signMessage(final String rpcParams, final Callback callback) {
+        Log.d(TAG, "signMessage");
+        if (!checkAvailability()) {
+            callback.invoke(false);
+            return;
+        }
+
+        Runnable r = new Runnable() {
+                @Override
+                public void run() {
+                    String res = Statusgo.signMessage(rpcParams);
+                    callback.invoke(res);
+                }
+            };
 
         StatusThreadPoolExecutor.getInstance().execute(r);
     }

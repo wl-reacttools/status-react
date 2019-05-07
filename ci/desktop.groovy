@@ -12,7 +12,7 @@ def cleanupAndDeps() {
 
 def buildClojureScript() {
   utils.nix_sh '''
-    make prod-build-desktop && \
+    lein prod-build-desktop && \
     ./scripts/build-desktop.sh buildClojureScript
   '''
 }

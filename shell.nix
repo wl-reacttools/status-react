@@ -43,7 +43,7 @@ in _mkShell {
       ${projectDeps.shellHook}
       ${lib.optionalString useFastlanePkg _fastlane.shellHook}
 
-      if [ ! -f $STATUS_REACT_HOME/.ran-setup ]; then
+      if [ "$IN_NIX_SHELL" != 'pure' ] && [ ! -f $STATUS_REACT_HOME/.ran-setup ]; then
         $STATUS_REACT_HOME/scripts/setup
         touch $STATUS_REACT_HOME/.ran-setup
       fi

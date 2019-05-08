@@ -69,7 +69,7 @@ def prep(type = 'nightly') {
 
   if (env.TARGET_OS == 'ios') {
     /* install ruby dependencies */
-    utils.nix_sh 'bundle install --gemfile=fastlane/Gemfile --quiet'
+    utils.nix_bundle_sh 'bundle install --gemfile=fastlane/Gemfile --path vendor/bundle'
   }
 
   def prepareTarget=env.TARGET_OS

@@ -46,7 +46,20 @@ def nix_fastlane_sh(cmd) {
     . ~/.nix-profile/etc/profile.d/nix.sh
     set -x
     nix-shell --argstr target-os \'${env.TARGET_OS}\' \\
-              ${pureFlag} --run \'printenv && \$FASTLANE_SCRIPT ${cmd}\' \\
+              ${pureFlag} --run \'\$FASTLANE_SCRIPT ${cmd}\' \\
+              \'${env.WORKSPACE}/shell.nix\'
+  """
+}
+
+def nix_bundle_sh(cmd) {
+  def pureFlag = '--pure --keep LANG --keep LANGUAGE --keep LC_ALL --keep DIAWI_TOKEN --keep DIAWI_IPA --keep APK_PATH --keep GOOGLE_PLAY_JSON_KEY --keep SAUCE_LABS_NAME --keep SAUCE_USERNAME --keep SAUCE_ACCESS_KEY --keep FASTLANE_DISABLE_COLORS --keep FASTLANE_APPLE_ID --keep FASTLANE_PASSWORD --keep KEYCHAIN_PASSWORD --keep MATCH_PASSWORD --keep REALM_DISABLE_ANALYTICS --keep STATUS_RELEASE_STORE_FILE --keep GRADLE_USER_HOME'
+
+  sh """
+    set +x
+    . ~/.nix-profile/etc/profile.d/nix.sh
+    set -x
+    nix-shell --argstr target-os \'${env.TARGET_OS}\' \\
+              ${pureFlag} --run \'${cmd}\' \\
               \'${env.WORKSPACE}/shell.nix\'
   """
 }

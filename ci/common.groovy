@@ -67,11 +67,6 @@ def prep(type = 'nightly') {
     utils.genBuildNumber()
   }
 
-  if (env.TARGET_OS == 'ios') {
-    /* install ruby dependencies */
-    utils.nix_bundle_sh 'bundle install --gemfile=fastlane/Gemfile --path vendor/bundle'
-  }
-
   def prepareTarget=env.TARGET_OS
   if (env.TARGET_OS == 'macos' || env.TARGET_OS == 'linux' || env.TARGET_OS == 'windows') {
     prepareTarget='desktop'

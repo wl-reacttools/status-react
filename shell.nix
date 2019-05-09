@@ -5,7 +5,7 @@ with pkgs;
 let
   projectDeps = import ./default.nix { inherit target-os; };
   platform = callPackage ./nix/platform.nix { inherit target-os; };
-  useFastlanePkg = platform.targetMobile;
+  useFastlanePkg = platform.targetAndroid && !isDarwin;
   # TODO: Try to use stdenv for iOS. The problem is with building iOS as the build is trying to pass parameters to Apple's ld that are meant for GNU's ld (e.g. -dynamiclib)
   _stdenv = stdenvNoCC;
   _mkShell = mkShell.override { stdenv = _stdenv; };
@@ -30,8 +30,7 @@ in _mkShell {
     ps # used in scripts/start-react-native.sh
     unzip
     wget
-  ] ++ lib.optionals useFastlanePkg [ bundler _fastlane.package ]
-  ++ lib.optional (_stdenv.isDarwin && useFastlanePkg) clang;
+  ] ++ (lib.optionals platform.targetMobile (if useFastlanePkg then [ fastlane ] else [ bundler ruby clang ]));
   inputsFrom = [ projectDeps ];
   TARGET_OS=target-os;
   shellHook =

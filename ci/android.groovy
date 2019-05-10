@@ -42,7 +42,7 @@ def uploadToPlayStore(type = 'nightly') {
   withCredentials([
     string(credentialsId: "SUPPLY_JSON_KEY_DATA", variable: 'GOOGLE_PLAY_JSON_KEY'),
   ]) {
-    utils.nix_fastlane_sh "android ${type}"
+    utils.nix_sh "fastlane android ${type}"
   }
 }
 
@@ -58,7 +58,8 @@ def uploadToSauceLabs() {
     string(credentialsId: 'SAUCE_ACCESS_KEY', variable: 'SAUCE_ACCESS_KEY'),
     string(credentialsId: 'SAUCE_USERNAME', variable: 'SAUCE_USERNAME'),
   ]) {
-    utils.nix_fastlane_sh 'android saucelabs'
+    utils.nix_sh "echo $PATH"
+    utils.nix_sh 'fastlane android saucelabs'
   }
   return env.SAUCE_LABS_NAME
 }
@@ -68,7 +69,7 @@ def uploadToDiawi() {
   withCredentials([
     string(credentialsId: 'diawi-token', variable: 'DIAWI_TOKEN'),
   ]) {
-    utils.nix_fastlane_sh 'android upload_diawi'
+    utils.nix_sh 'fastlane android upload_diawi'
   }
   diawiUrl = readFile "${env.WORKSPACE}/fastlane/diawi.out"
   return diawiUrl

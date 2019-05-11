@@ -66,7 +66,7 @@
                           events)))))
 
 (defn subscribe! []
-  (when config/rn-bridge-threshold-warnings-enabled?
+  (when true #_config/rn-bridge-threshold-warnings-enabled?
     (let [emitter (js-dependencies/EventEmmiter.)
           events  (.stream snoopy emitter)]
       (threshold-warnings
@@ -93,9 +93,9 @@
         :threshold-message (str "too many calls to UIManager, most likely during navigation. "
                                 "Please consider preloading of screens or lazy loading of some components")
         :tick?             false
-        :print-events?     false
+        :print-events?     true
        ;; todo(rasom): revisit this number when/if
        ;; https://github.com/status-im/status-react/pull/2849 will be merged
-        :threshold         200
+        :threshold         10000
         :events            events}))))
 

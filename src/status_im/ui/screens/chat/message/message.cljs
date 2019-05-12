@@ -86,26 +86,34 @@
    (i18n/label (if expanded? :show-less :show-more))])
 
 (defn text-message
-  [{:keys [chat-id message-id content timestamp-str group-chat outgoing current-public-key expanded?] :as message}]
-  [message-view message
-   (let [collapsible? (and (:should-collapse? content) group-chat)]
-     [react/view
-      (when (:response-to content)
-        [quoted-message (:response-to content) outgoing current-public-key])
-      (apply react/nested-text
-             (cond-> {:style (style/text-message collapsible? outgoing)
-                      :text-break-strategy :balanced}
-               (and collapsible? (not expanded?))
-               (assoc :number-of-lines constants/lines-collapse-threshold))
-             (conj (if-let [render-recipe (:render-recipe content)]
-                     (chat.utils/render-chunks render-recipe message)
-                     [(:text content)])
-                   [{:style (style/message-timestamp-placeholder outgoing)}
-                    (str "  " timestamp-str)]))
+  [{:keys [chat-id message-id content timestamp-str group-chat outgoing current-public-key expanded? content-type] :as message}]
+  (let [collapsible? (and (:should-collapse? content) group-chat)]
+    (cond->
+      [react/view (style/message-view message)]
+      (:response-to content)
+      (conj [quoted-message (:response-to content) outgoing current-public-key])
 
-      (when collapsible?
-        [expand-button expanded? chat-id message-id])])
-   {:justify-timestamp? true}])
+      :always
+      vec
+
+      :always
+      (conj (apply react/nested-text
+                   (cond-> {:style               (style/text-message collapsible? outgoing)
+                            :text-break-strategy :balanced}
+                     (and collapsible? (not expanded?))
+                     (assoc :number-of-lines constants/lines-collapse-threshold))
+                   (conj (if-let [render-recipe (:render-recipe content)]
+                           (chat.utils/render-chunks render-recipe message)
+                           [(:text content)])
+                         [{:style (style/message-timestamp-placeholder outgoing)}
+                          (str "  " timestamp-str)])))
+      collapsible?
+      (conj [expand-button expanded? chat-id message-id])
+
+      :always
+      (conj [message-timestamp timestamp-str true outgoing (or (get content :command-path)
+                                                               (get content :command-ref))
+             content content-type]))))
 
 (defn emoji-message
   [{:keys [content] :as message}]
@@ -238,9 +246,11 @@
               (if outgoing
                 [text-status status]))))))))
 
-(defview message-author-name [from message-username]
+(defview message-author-name [from message-username st]
   (letsubs [username [:contacts/contact-name-by-identity from]]
-    (chat.utils/format-author from (or username message-username) style/message-author-name)))
+    (chat.utils/format-author from (or username message-username)
+                              (fn [arg]
+                                (merge (style/message-author-name arg) st)))))
 
 (defn message-body
   [{:keys [last-in-group?
@@ -252,18 +262,19 @@
            modal?
            username] :as message} content]
   [react/view (style/group-message-wrapper message)
+   (when display-username?
+     [message-author-name from username {:margin-left 52}])
    [react/view (style/message-body message)
-    (when display-photo?
-      [react/view style/message-author
-       (when last-in-group?
-         [react/touchable-highlight {:on-press #(when-not modal? (re-frame/dispatch [:chat.ui/show-profile from]))}
-          [react/view
-           [photos/member-photo from]]])])
-    [react/view (style/group-message-view outgoing message-type)
-     (when display-username?
-       [message-author-name from username])
-     [react/view {:style (style/timestamp-content-wrapper outgoing message-type)}
-      content]]]
+    (cond (and display-photo? last-in-group?)
+          [react/touchable-highlight
+           {:on-press #(when-not modal? (re-frame/dispatch [:chat.ui/show-profile from]))
+            :style style/message-author}
+           [react/view
+            [photos/member-photo from]]]
+          display-photo?
+          [react/view style/message-author])
+    [react/view {:style (style/timestamp-content-wrapper outgoing message-type)}
+     content]]
    [react/view (style/delivery-status outgoing)
     [message-delivery-status message]]])
 
@@ -272,23 +283,22 @@
   (list-selection/chat-message message-id old-message-id (:text content) (i18n/label :t/message)))
 
 (defn chat-message [{:keys [outgoing group-chat modal? current-public-key content-type content] :as message}]
-  [react/view
-   [react/touchable-highlight {:on-press      (fn [arg]
-                                                (if (and platform/desktop? (= "right" (.-button (.-nativeEvent arg))))
-                                                  (open-chat-context-menu message)
-                                                  (do
-                                                    (when (= content-type constants/content-type-sticker)
-                                                      (re-frame/dispatch [:stickers/open-sticker-pack (:pack content)]))
-                                                    (re-frame/dispatch [:chat.ui/set-chat-ui-props {:messages-focused? true
-                                                                                                    :show-stickers? false}])
-                                                    (when-not platform/desktop?
-                                                      (react/dismiss-keyboard!)))))
-                               :on-long-press #(when (or (= content-type constants/content-type-text) (= content-type constants/content-type-emoji))
-                                                 (open-chat-context-menu message))}
-    [react/view {:accessibility-label :chat-item}
-     (let [incoming-group (and group-chat (not outgoing))]
-       [message-content message-body (merge message
-                                            {:current-public-key current-public-key
-                                             :group-chat         group-chat
-                                             :modal?             modal?
-                                             :incoming-group     incoming-group})])]]])
+  [react/touchable-highlight {:on-press      (fn [arg]
+                                               (if (and platform/desktop? (= "right" (.-button (.-nativeEvent arg))))
+                                                 (open-chat-context-menu message)
+                                                 (do
+                                                   (when (= content-type constants/content-type-sticker)
+                                                     (re-frame/dispatch [:stickers/open-sticker-pack (:pack content)]))
+                                                   (re-frame/dispatch [:chat.ui/set-chat-ui-props {:messages-focused? true
+                                                                                                   :show-stickers?    false}])
+                                                   (when-not platform/desktop?
+                                                     (react/dismiss-keyboard!)))))
+                              :on-long-press #(when (or (= content-type constants/content-type-text) (= content-type constants/content-type-emoji))
+                                                (open-chat-context-menu message))}
+   [react/view {:accessibility-label :chat-item}
+    (let [incoming-group (and group-chat (not outgoing))]
+      [message-content message-body (merge message
+                                           {:current-public-key current-public-key
+                                            :group-chat         group-chat
+                                            :modal?             modal?
+                                            :incoming-group     incoming-group})])]])

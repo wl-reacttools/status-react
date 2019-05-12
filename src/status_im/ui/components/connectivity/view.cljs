@@ -65,7 +65,7 @@
 
 (defn manage-visibility [connected? anim-opacity anim-height]
   (if connected?
-    (do (animation/start
+    (do #_(animation/start
          (animation/parallel
           [(animation/timing anim-opacity
                              {:toValue 0
@@ -81,7 +81,7 @@
          #(reset! show-connected? false)
          2000))
     (do (reset! show-connected? true)
-        (animation/start
+        #_(animation/start
          (animation/parallel
           [(animation/timing anim-opacity
                              {:toValue 1
@@ -106,15 +106,15 @@
       :reagent-render
       (fn [{:keys [view-id message on-press-fn
                    connected? connecting? loading-indicator?] :as opts}]
-        (when (or (not connected?)
+        (when (or (not false)
                   @show-connected?)
-          [react/animated-view {:style               (styles/text-wrapper
+          [react/view {:style               (styles/text-wrapper
                                                       (assoc opts
-                                                             :height anim-height
+                                                             :height 35
                                                              :background-color (if connected?
                                                                                  colors/green
                                                                                  colors/gray)
-                                                             :opacity anim-opacity
+                                                             ;:opacity 0
                                                              :modal? (= view-id :chat-modal)))
                                 :accessibility-label :connection-status-text}
            (when connecting?

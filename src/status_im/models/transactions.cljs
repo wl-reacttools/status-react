@@ -372,7 +372,7 @@
 (defn- background-sync [web3 account-address done-fn]
   (let [{:keys [network network-status :account/account app-state wallet chats :wallet/all-tokens]} @re-frame.db/app-db
         chain (ethereum/network->chain-keyword (get-in account [:networks network]))]
-    (assert (and web3 account-address network network-status account app-state wallet chats)
+    #_(assert (and web3 account-address network network-status account app-state wallet chats)
             "Must have all necessary data to run background transaction sync")
     (if-not (and (not= network-status :offline)
                  (= app-state "active")

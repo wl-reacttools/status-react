@@ -75,7 +75,7 @@
         :threshold-message "too many calls to bridge, something suspicious is happening"
         :tick?             false
         :print-events?     false
-        :threshold         400
+        :threshold         10000
         :events            events})
 
       (threshold-warnings
@@ -84,7 +84,7 @@
         :threshold-message "too many setTimeout/setInterval calls"
         :tick?             false
         :print-events?     false
-        :threshold         70
+        :threshold         10000
         :events            events})
 
       (threshold-warnings

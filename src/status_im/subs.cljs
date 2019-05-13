@@ -1631,3 +1631,10 @@
  :<- [:search/filter]
  (fn [[chats search-filter]]
    (apply-filter search-filter chats extract-chat-attributes)))
+
+;; INTRO WIZARD
+(re-frame/reg-sub
+ :intro-wizard
+ (fn [db]
+   (:intro-wizard db)))
+

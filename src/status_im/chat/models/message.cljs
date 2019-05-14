@@ -23,7 +23,7 @@
             [status-im.utils.fx :as fx]
             [status-im.utils.platform :as platform]
             [status-im.utils.types :as types]
-            [taoensso.timbre :as log]))
+            [status-im.utils.log :as log]))
 
 (defn- wrap-group-message
   "Wrap a group message in a membership update"

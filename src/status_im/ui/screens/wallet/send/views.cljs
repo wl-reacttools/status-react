@@ -28,7 +28,7 @@
             [status-im.utils.money :as money]
             [status-im.utils.security :as security]
             [status-im.utils.utils :as utils]
-            [taoensso.timbre :as log])
+            [status-im.utils.log :as log])
   (:require-macros [status-im.utils.views :refer [defview letsubs]]))
 
 (defn- toolbar [modal? title]

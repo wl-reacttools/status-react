@@ -16,7 +16,7 @@
             [status-im.utils.config :as config]
             [status-im.utils.fx :as fx]
             [status-im.utils.platform :as platform]
-            [taoensso.timbre :as log]))
+            [status-im.utils.log :as log]))
 
 ;; TODO(yenda) investigate why `handle-universal-link` event is
 ;; dispatched 7 times for the same link

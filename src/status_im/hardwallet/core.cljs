@@ -17,7 +17,7 @@
             [status-im.utils.platform :as platform]
             [status-im.utils.types :as types]
             [status-im.wallet.core :as wallet]
-            [taoensso.timbre :as log]
+            [status-im.utils.log :as log]
             status-im.hardwallet.fx))
 
 (def default-pin "000000")

@@ -5,7 +5,7 @@
             [status-im.utils.types :as types]
             [status-im.utils.handlers :as handlers]
             [status-im.utils.email :as mail]
-            [taoensso.timbre :as log]
+            [status-im.utils.log :as log]
             [status-im.utils.config :as config]))
 
 (def report-email "error-reports@status.im")

@@ -20,7 +20,7 @@
             [status-im.utils.random :as random]
             [status-im.utils.types :as types]
             [status-im.utils.universal-links.core :as universal-links]
-            [taoensso.timbre :as log]))
+            [status-im.utils.log :as log]))
 
 (fx/defn initialize-browsers
   [{:keys [db all-stored-browsers]}]

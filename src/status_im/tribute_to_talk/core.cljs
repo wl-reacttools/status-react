@@ -13,7 +13,7 @@
             [status-im.utils.contenthash :as contenthash]
             [status-im.utils.fx :as fx]
             [status-im.wallet.core :as wallet]
-            [taoensso.timbre :as log]))
+            [status-im.utils.log :as log]))
 
 (fx/defn update-settings
   [{:keys [db] :as cofx} {:keys [snt-amount message update] :as new-settings}]

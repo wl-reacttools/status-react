@@ -22,7 +22,7 @@
             [status-im.utils.fx :as fx]
             [status-im.utils.keychain.core :as keychain]
             [status-im.utils.platform :as platform]
-            [taoensso.timbre :as log]))
+            [status-im.utils.log :as log]))
 
 (defn init-store!
   "Try to decrypt the database, move on if successful otherwise go back to

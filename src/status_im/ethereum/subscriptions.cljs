@@ -6,7 +6,7 @@
             [status-im.ethereum.tokens :as tokens]
             [status-im.ethereum.transactions.core :as transactions]
             [status-im.utils.fx :as fx]
-            [taoensso.timbre :as log]))
+            [status-im.utils.log :as log]))
 
 (fx/defn handle-signal
   [cofx {:keys [subscription_id data] :as event}]

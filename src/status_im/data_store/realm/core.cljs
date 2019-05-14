@@ -11,7 +11,7 @@
             [status-im.utils.async :as utils.async]
             [status-im.utils.fs :as fs]
             [status-im.utils.platform :as utils.platform]
-            [taoensso.timbre :as log]))
+            [status-im.utils.log :as log]))
 
 (defn to-buffer [key]
   (when-not (nil? key)

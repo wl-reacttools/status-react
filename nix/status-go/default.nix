@@ -54,7 +54,7 @@ let
 
   xcodeWrapper = composeXcodeWrapper xcodewrapperArgs;
 
-  statusGoArgs = { inherit owner repo rev version goPackagePath src goBuildFlags goBuildLdFlags; };
+  statusGoArgs = { inherit owner repo rev version goPackagePath src sha256 goBuildFlags goBuildLdFlags; };
   status-go-packages = {
     desktop = buildStatusGoDesktopLib (statusGoArgs // {
       outputFileName = "libstatus.a";

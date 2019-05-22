@@ -1,8 +1,9 @@
 { pkgs, nodejs }:
 
-let nodePackages = import ./output { inherit pkgs; inherit nodejs; };
+let nodePackages = import ./output { inherit pkgs nodejs; };
     realm-version = "5.12.1";
-    realm-patched-name = "realm-git+https://github.com/status-im/realm-js.git#heads/v2.20.1";
+    realm-patched-name = "realm-https://github.com/status-im/realm-js/archive/v2.20.1.tar.gz";
+    # We download ${realm-core-src} to ${realm-dest-dir} in order to avoid having realm try to download these files on its own (which is disallowed by Nix)
     realm-core-src = pkgs.fetchurl (
       if builtins.currentSystem == "x86_64-darwin" then {
         url = "https://static.realm.io/downloads/core/realm-core-Release-v${realm-version}-Darwin-devel.tar.gz";
@@ -13,8 +14,8 @@ let nodePackages = import ./output { inherit pkgs; inherit nodejs; };
       }
     );
     realm-dest-dir = if builtins.currentSystem == "x86_64-darwin" then
-      "$out/lib/node_modules/realm/vendor/realm-darwin-x64" else
-      "$out/lib/node_modules/realm/vendor/realm-linux-x64";
+      "$out/lib/node_modules/realm/compiled/node-v64_darwin_x64/realm.node" else
+      "$out/lib/node_modules/realm/compiled/node-v64_linux_x64/realm.node";
 in nodePackages // {
   ${realm-patched-name} = nodePackages.${realm-patched-name}.override(oldAttrs: {
     buildInputs = oldAttrs.buildInputs ++ [ pkgs.nodePackages.node-pre-gyp ];
@@ -22,7 +23,7 @@ in nodePackages // {
     preRebuild = ''
       # Do not attempt to do any http calls!
       substituteInPlace $out/lib/node_modules/realm/scripts/download-realm.js \
-        --replace "return acquire(requirements, realmDir)" ""
+        --replace "!shouldSkipAcquire(realmDir, requirements, options.force)" "false"
       mkdir -p ${realm-dest-dir}
       tar -xzf ${realm-core-src} -C ${realm-dest-dir}
     '';

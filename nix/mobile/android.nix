@@ -1,5 +1,5 @@
 { config, stdenv, callPackage,
-  androidenv, openjdk, gradle }:
+  androidenv, openjdk, gradle, gnupg }:
 
 with stdenv;
 

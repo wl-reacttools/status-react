@@ -1016,6 +1016,11 @@
    (hardwallet/get-application-info cofx nil nil)))
 
 (handlers/register-handler-fx
+ :hardwallet/save-key-uid-to-account
+ (fn [cofx _]
+   (hardwallet/save-key-uid-to-account cofx)))
+
+(handlers/register-handler-fx
  :hardwallet.callback/on-get-application-info-success
  (fn [cofx [_ info on-success]]
    (hardwallet/on-get-application-info-success cofx info on-success)))

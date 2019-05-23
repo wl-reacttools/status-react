@@ -30,6 +30,14 @@
          (filter #(= keycard-instance-uid (:keycard-instance-uid %)))
          first)))
 
+(defn- find-account-by-keycard-key-uid
+  [db keycard-key-uid]
+  (when keycard-key-uid
+    (->> (:accounts/accounts db)
+         vals
+         (filter #(= keycard-key-uid (:keycard-key-uid %)))
+         first)))
+
 (defn get-pairing
   ([db]
    (get-pairing db (get-in db [:hardwallet :application-info :instance-uid])))
@@ -257,20 +265,32 @@
        :hardwallet/get-keys {:pairing pairing
                              :pin     pin}})))
 
+(defn- get-account-for-login
+  [db key-uid instance-uid auto-login?]
+  (if auto-login?
+    (or
+     (find-account-by-keycard-key-uid db key-uid)
+     ; NOTE: temporary fix to allow accounts without key-uid to login using instance-uid
+     (let [acc (find-account-by-keycard-instance-uid db instance-uid)]
+       (when-not (:keycard-key-uid acc)
+         acc)))
+    (get-in db [:accounts/accounts (get-in db [:accounts/login :address])])))
+
 (fx/defn login-with-keycard
   [{:keys [db] :as cofx} auto-login?]
-  (let [account-login-address (get-in db [:accounts/login :address])
-        account-was-manually-selected? account-login-address
-        account-instance-uid (get-in db [:accounts/accounts account-login-address :keycard-instance-uid])
+  (let [keycard-key-uid (get-in db [:hardwallet :application-info :key-uid])
         keycard-instance-uid (get-in db [:hardwallet :application-info :instance-uid])
-        account (find-account-by-keycard-instance-uid db keycard-instance-uid)
-        account-mismatch? (if account-was-manually-selected?
-                            (not= account-instance-uid keycard-instance-uid)
-                            (nil? account))
+        account (get-account-for-login db keycard-key-uid keycard-instance-uid auto-login?)
+        account-key-uid (get account :keycard-key-uid)
+        account-instance-uid (get account :keycard-instance-uid)
+        account-mismatch? (if auto-login?
+                            (nil? account)
+                            (if (:keycard-key-uid account)
+                              (not= account-key-uid keycard-key-uid)
+                              (not= account-instance-uid keycard-instance-uid)))
         pairing (:keycard-pairing account)]
-
     (cond
-      (empty? keycard-instance-uid)
+      (empty? keycard-key-uid)
       (fx/merge cofx
                 {:utils/show-popup {:title   (i18n/label :t/no-account-on-card)
                                     :content (i18n/label :t/no-account-on-card-text)}}
@@ -688,6 +708,21 @@
                        (get-pairing db instance-uid)))]
     {:hardwallet/get-application-info {:pairing    pairing'
                                        :on-success on-card-read}}))
+
+; NOTE: temporary fn to migrate old accounts without keycard-key-uid saved in account,
+; runs after keycard login
+(fx/defn save-key-uid-to-account
+  [{:keys [db]}]
+  (let [keycard-key-uid (get-in db [:hardwallet :application-info :key-uid])
+        account (:account/account db)
+        account-key-uid (:keycard-key-uid account)]
+    (when (and (nil? account-key-uid)
+               (< 2 (count keycard-key-uid)))
+      (let [account' (assoc account :keycard-key-uid keycard-key-uid)]
+        {:db                 (-> db
+                                 (assoc-in [:account/account :keycard-key-uid] keycard-key-uid)
+                                 (assoc-in [:accounts/accounts (:address account') :keycard-key-uid] keycard-key-uid))
+         :data-store/base-tx [(accounts-store/save-account-tx account')]}))))
 
 (defn- tag-lost-exception? [code error]
   (or
@@ -1280,6 +1315,7 @@
                  wallet-address
                  encryption-public-key
                  keycard-instance-uid
+                 keycard-key-uid
                  secrets]} :hardwallet} db
         {:keys [pairing paired-on]} secrets]
     (fx/merge (-> cofx
@@ -1290,6 +1326,7 @@
                                                    :address              wallet-address
                                                    :mnemonic             ""
                                                    :keycard-instance-uid keycard-instance-uid
+                                                   :keycard-key-uid      keycard-key-uid
                                                    :keycard-pairing      pairing
                                                    :keycard-paired-on    paired-on}
                                                   encryption-public-key
@@ -1304,6 +1341,7 @@
                 whisper-address
                 wallet-address
                 instance-uid
+                key-uid
                 encryption-public-key]} (js->clj data :keywordize-keys true)
         whisper-public-key' (str "0x" whisper-public-key)
         instance-uid' (get-in db [:hardwallet :keycard-instance-uid])]
@@ -1315,6 +1353,8 @@
                        (assoc-in [:hardwallet :wallet-address] wallet-address)
                        (assoc-in [:hardwallet :encryption-public-key] encryption-public-key)
                        (assoc-in [:hardwallet :keycard-instance-uid] (or instance-uid' instance-uid))
+                       (assoc-in [:hardwallet :keycard-key-uid] key-uid)
+                       (assoc-in [:hardwallet :application-info :key-uid] key-uid)
                        (assoc-in [:hardwallet :on-card-connected] nil)
                        (update :hardwallet dissoc :recovery-phrase)
                        (update-in [:hardwallet :secrets] dissoc :pin :puk :password)
@@ -1353,7 +1393,8 @@
                                                             :address wallet-address
                                                             :photo-path photo-path
                                                             :name name))
-               :hardwallet/get-application-info {:pairing (get-pairing db instance-uid)}}
+               :hardwallet/get-application-info {:pairing    (get-pairing db instance-uid)
+                                                 :on-success :hardwallet/save-key-uid-to-account}}
               (accounts.login/user-login true))))
 
 (fx/defn on-get-keys-error

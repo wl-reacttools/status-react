@@ -17,13 +17,13 @@
     (swap! logs-queue pop)))
 
 (defn init-logs []
-  (log/set-level! config/log-level)
-  (log/debug)
-  (log/merge-config!
-   {:output-fn (fn [& data]
-                 (let [res (apply log/default-output-fn data)]
-                   (add-log-entry res)
-                   res))}))
+  (log/set-level! config/log-level))
+  ;;(log/debug)
+  ;; (log/merge-config!
+  ;;  {:output-fn (fn [& data]
+  ;;                (let [res (apply log/default-output-fn data)]
+  ;;                  (add-log-entry res)
+  ;;                  res))})
 
 (defn get-js-logs []
   (clojure.string/join "\n" @logs-queue))

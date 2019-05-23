@@ -182,7 +182,7 @@
       (when (and (not modal?)
                  (not seed-backed-up?)
                  (some (fn [{:keys [amount]}]
-                         (and amount (not (.isZero amount))))
+                         (and amount (not (.isZero ^js amount))))
                        assets))
         [backup-seed-phrase])
       [react/view {:style {:background-color colors/blue}}

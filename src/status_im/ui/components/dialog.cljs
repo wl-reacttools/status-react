@@ -1,10 +1,10 @@
 (ns status-im.ui.components.dialog
   (:require [status-im.react-native.js-dependencies :as rn-dependencies]))
 
-(defn dialogs [] (.-default (rn-dependencies/dialogs)))
+(defn dialogs [] (.-default ^js (rn-dependencies/dialogs)))
 
 (defn show [{:keys [title options cancel-text on-cancel]}]
-  (.. (dialogs)
+  (.. ^js (dialogs)
       (showPicker title nil (clj->js {:items        (mapv #(select-keys % [:label])
                                                           options)
                                       :negativeText cancel-text

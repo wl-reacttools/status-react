@@ -4,6 +4,7 @@
             [status-im.chat.models :as chat-model]
             [status-im.utils.datetime :as time]
             [status-im.utils.fx :as fx]
+            [status-im.utils.config :as config]
             [status-im.utils.priority-map :refer [empty-message-map]]
             [status-im.mailserver.core :as mailserver]))
 
@@ -60,10 +61,20 @@
          message-id)))
    statuses))
 
-(fx/defn initialize-chats
-  "Initialize persisted chats on startup"
+(defn update-chats-in-app-db [{:keys [db] :as cofx} chats]
+  (fx/merge cofx
+            {:db (assoc db :chats chats)}
+            (commands/load-commands commands/register)))
+
+(defn initialize-chats-go
+  [cofx]
+  (fx/merge cofx
+            {:status-go/get-chats []}))
+
+(defn initialize-chats-legacy
+  "Use realm + clojure to manage chats"
   [{:keys [db get-all-stored-chats] :as cofx}
-   {:keys [from to] :or {from 0 to nil}}]
+   from to]
   (let [old-chats (:chats db)
         chats (reduce (fn [acc {:keys [chat-id] :as chat}]
                         (assoc acc chat-id
@@ -74,9 +85,15 @@
                       {}
                       (get-all-stored-chats from to))
         chats (merge old-chats chats)]
-    (fx/merge cofx
-              {:db (assoc db :chats chats)}
-              (commands/load-commands commands/register))))
+    (update-chats-in-app-db cofx chats)))
+
+(fx/defn initialize-chats
+  "Initialize persisted chats on startup"
+  [cofx
+   {:keys [from to] :or {from 0 to nil}}]
+  (if config/use-status-go-protocol?
+    (initialize-chats-go cofx)
+    (initialize-chats-legacy cofx from to)))
 
 (defn load-more-messages
   "Loads more messages for current chat"
@@ -84,7 +101,9 @@
     get-stored-messages :get-stored-messages
     get-stored-user-statuses :get-stored-user-statuses
     get-referenced-messages :get-referenced-messages :as cofx}]
-  (when-not (get-in db [:chats current-chat-id :all-loaded?])
+  ;; TODO: re-implement functionality for status-go protocol
+  (when-not (or config/use-status-go-protocol?
+                (get-in db [:chats current-chat-id :all-loaded?]))
     (let [previous-pagination-info   (get-in db [:chats current-chat-id :pagination-info])
           {:keys [messages
                   pagination-info

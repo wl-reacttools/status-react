@@ -60,6 +60,7 @@
             [status-im.wallet.core :as wallet]
             [status-im.wallet.db :as wallet.db]
             [status-im.web3.core :as web3]
+            [status-im.chat.status-go.core :as chats-go]
             [taoensso.timbre :as log]
             [status-im.wallet.custom-tokens.core :as custom-tokens]))
 
@@ -115,6 +116,16 @@
    (fx/merge cofx
              {:db (assoc db :chats/loading? false)}
              (chat.loading/initialize-chats {:from 10}))))
+
+(handlers/register-handler-fx
+ :chats-list/load-success
+ (fn [cofx [_ chats-response]]
+   (chat.loading/update-chats-in-app-db cofx (:chats chats-response))))
+
+(handlers/register-handler-fx
+ :chats-list/load-failure
+ (fn [{:keys [db] :as cofx} [_ error]]
+   (log/error "can't retrieve chats list from status-go" :chats-list/load-failure error)))
 
 (defn account-change-success
   [{:keys [db] :as cofx} [_ address nodes]]

@@ -8,6 +8,7 @@
             [status-im.node.core :as node]
             [status-im.pairing.core :as pairing]
             [status-im.transport.message.core :as transport.message]
+            [status-im.chat.models.loading :as chat.loading]
             [status-im.utils.fx :as fx]
             [status-im.utils.security :as security]
             [status-im.utils.types :as types]
@@ -75,4 +76,5 @@
       "discovery.summary"  (summary cofx event)
       "subscriptions.data" (ethereum.subscriptions/handle-signal cofx event)
       "subscriptions.error" (ethereum.subscriptions/handle-error cofx event)
+      "status.chats.did-change" (chat.loading/initialize-chats-go cofx)
       (log/debug "Event " type " not handled"))))

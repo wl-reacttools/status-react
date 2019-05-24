@@ -63,6 +63,63 @@
                                                   :node/status]))]
     {:logs/archive-logs [db-json ::send-email]}))
 
+(fx/defn show-logs-dialog
+  [{:keys [db]}]
+  (when-not (:logging/dialog-shown? db)
+    {:db
+     (assoc db :logging/dialog-shown? true)
+     :utils/show-confirmation
+     {:title               (i18n/label :t/send-logs)
+      :content             (i18n/label :t/send-logs-to
+                                       {:email report-email})
+      :confirm-button-text (i18n/label :t/send-logs)
+      :on-accept           #(re-frame/dispatch
+                             [:logging.ui/send-logs-pressed])
+      :on-cancel           #(re-frame/dispatch
+                             [:logging/dialog-canceled])}}))
+
+(fx/defn dialog-closed
+  [{:keys [db]}]
+  {:db (dissoc db :logging/dialog-shown?)})
+
+(defn email-body
+  [{:keys [:web3-node-version :mailserver/current-id
+           :node-info :peers-summary]
+    :as db}]
+  "logs attached"
+  (let [build-number  (if platform/desktop? build/version build/build-no)
+        build-version (str build/version " (" build-number ")")
+        separator (clojure.string/join (take 40 (repeat "-")))
+        [enode-id ip-address port]
+        (transport.utils/extract-url-components (:enode node-info))]
+    (clojure.string/join
+     "\n"
+     (concat [(i18n/label :t/report-bug-email-template)]
+             [separator
+              (str "App version: " build-version)
+              (str "OS: " platform/os)
+              (str "Node version: " web3-node-version)
+              (str "Mailserver: " (name current-id))
+              separator
+              "Node Info"
+              (str "id: " enode-id)
+              (str "ip: " ip-address)
+              (str "port: " port)
+              separator
+              "Peers"]
+             (mapcat
+              (fn [{:keys [enode]}]
+                (let [[enode-id ip-address port]
+                      (transport.utils/extract-url-components enode)]
+                  [(str "id: " enode-id)
+                   (str "ip: " ip-address)
+                   (str "port: " port)
+                   "\n"]))
+              peers-summary)
+             [separator
+              (datetime/timestamp->long-date
+               (datetime/now))]))))
+
 (handlers/register-handler-fx
  ::send-email
  (fn [cofx [_ archive-path]]

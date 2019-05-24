@@ -22,7 +22,11 @@
    "eth_getTransactionByHash" {}
    "eth_getTransactionReceipt" {}
    "eth_newBlockFilter" {:subscription? true}
-   "eth_newFilter" {:subscription? true}})
+   "eth_newFilter" {:subscription? true}
+   "status_joinPublicChat" {}
+   "status_chats" {}
+   "status_startOneOnOneChat" {}
+   "status_removeChat" {}})
 
 (defn call
   [{:keys [method params on-success on-error]}]

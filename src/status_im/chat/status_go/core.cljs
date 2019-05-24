@@ -1,19 +1,16 @@
 (ns status-im.chat.status-go.core
   (:require [re-frame.core :as re-frame]
             [taoensso.timbre :as log]
-            [status-im.native-module.core :as status]
+            [status-im.ethereum.json-rpc :as json-rpc]
             [status-im.utils.handlers :as handlers]
             [status-im.utils.types :as types]))
 
 (defn- invoke-api
-  [api-method params on-success on-failure]
-  (let [args    {:jsonrpc "2.0"
-                 :id      10
-                 :method  api-method
-                 :params  params}
-        payload (.stringify js/JSON (clj->js args))]
-    (status/call-private-rpc payload
-                             (handlers/response-handler on-success on-failure))))
+  [api-method params on-success on-error]
+  (json-rpc/call {:method api-method
+                  :params params
+                  :on-success on-success
+                  :on-error on-error}))
 
 (defn- invoke-api-with-default-handler
   [api-method params]

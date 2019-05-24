@@ -46,15 +46,17 @@
         argsyms (take (count args) (repeatedly #(gensym "arg")))]
     (if (and (sequential? events)
              (every? keyword? events))
-      `(do (clojure.core/defn ~(with-meta name m)
-             ([~@argsyms] (fn [cofx#] (~name cofx# ~@argsyms)))
-             ([cofx# ~@args]
-              (if (and (map? cofx#)
-                       (not (nil? (:db cofx#))))
-                (let [~cofx cofx#]
-                  ~@fdecl)
-                (throw (js/Error. (str "fx/defn expects a map of cofx as first argument got " cofx# " in function " ~name))))))
-           (when-not (find-ns 'status-im.utils.handlers)
-             (require 'status-im.utils.handlers))
-           ~@(register-events events interceptors name args))
+      `(do
+         (clojure.core/defn ~(with-meta name m)
+           ([~@argsyms] (fn [cofx#] (~(with-meta name m) cofx# ~@argsyms)))
+           ([cofx# ~@args]
+            (if (and (map? cofx#)
+                     (not (nil? (:db cofx#))))
+              (let [~cofx cofx#]
+                ~@fdecl)
+              (throw (js/Error. (str "fx/defn expects a map of cofx as first argument got " cofx# " in function " ~name))))))
+         ~(when (not-empty events)
+            `(when-not (find-ns 'status-im.utils.handlers)
+               (require 'status-im.utils.handlers)))
+         ~@(register-events events interceptors (with-meta name m) args))
       (throw (Exception. (str "fx/defn expects a vector of keyword as value for :events key in attr-map in function " name))))))

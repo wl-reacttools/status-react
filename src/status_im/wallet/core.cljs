@@ -182,8 +182,8 @@
 (defmethod invalid-send-parameter? :gas-price [_ value]
   (cond
     (not value) :invalid-number
-    (.lt (money/->wei :gwei value) min-gas-price-wei) :not-enough-wei
-    (-> (money/->wei :gwei value) .decimalPlaces pos?) :invalid-number))
+    (.lt ^js (money/->wei :gwei value) min-gas-price-wei) :not-enough-wei
+    (-> ^js (money/->wei :gwei value) .decimalPlaces pos?) :invalid-number))
 
 (defmethod invalid-send-parameter? :default [_ value]
   (when (or (not value)

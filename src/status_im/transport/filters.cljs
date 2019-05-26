@@ -14,7 +14,7 @@
 
 (defn remove-filter! [{:keys [chat-id filter success-callback?]
                        :or   {success-callback? true}}]
-  (.stopWatching filter
+  (.stopWatching ^js filter
                  (fn [error _]
                    (if error
                      (log/warn :remove-filter-error filter error)
@@ -30,7 +30,7 @@
     (keep
      (fn [{:keys [options callback chat-id]}]
        (when-let [filter (.newMessageFilter
-                          (utils/shh web3)
+                          ^js (utils/shh web3)
                           (clj->js (assoc options :allowP2P true))
                           callback
                           #(log/warn :add-filter-error

@@ -155,7 +155,7 @@
 
 (defmethod storage-gateway :ipfs
   [{:keys [hash]}]
-  (let [base32hash (-> (.encode (js-dependencies/hi-base32) (alphabase.base58/decode hash))
+  (let [base32hash (-> (.encode ^js (js-dependencies/hi-base32) (alphabase.base58/decode hash))
                        (string/replace #"=" "")
                        (string/lower-case))]
     (str base32hash ".infura.status.im")))
@@ -168,7 +168,7 @@
   [{:keys [db] :as cofx} m]
   (let [current-url (get-current-url (get-current-browser db))
         host        (http/url-host current-url)
-        path        (subs current-url (+ (.indexOf current-url host) (count host)))
+        path        (subs current-url (+ (.indexOf ^js current-url host) (count host)))
         gateway     (storage-gateway m)]
     (fx/merge cofx
               {:db (-> (update db :browser/options
@@ -201,7 +201,7 @@
     {:browser/show-browser-selection link}))
 
 (fx/defn update-browser-on-nav-change
-  [cofx url error?]
+  [cofx ^js url error?]
   (let [browser (get-current-browser (:db cofx))
         options (get-in cofx [:db :browser/options])
         current-url (:url options)]
@@ -344,7 +344,7 @@
       (browser.permissions/process-permission cofx dapp-name permission messageId params))))
 
 (defn filter-letters-numbers-and-replace-dot-on-dash [value]
-  (let [cc (.charCodeAt value 0)]
+  (let [cc (.charCodeAt ^js value 0)]
     (cond (or (and (> cc 96) (< cc 123))
               (and (> cc 64) (< cc 91))
               (and (> cc 47) (< cc 58)))
@@ -371,7 +371,7 @@
  :browser/send-to-bridge
  (fn [{:keys [message webview]}]
    (when (and message webview)
-     (.sendToBridge webview (types/clj->json message)))))
+     (.sendToBridge ^js webview (types/clj->json message)))))
 
 (re-frame/reg-fx
  :browser/call-rpc
